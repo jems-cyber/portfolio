@@ -1,72 +1,124 @@
+# ==============================================================================
+# SITE CONFIGURATION
+# ==============================================================================
 site:
-  name: AstroWind
-  site: 'https://astrowind.vercel.app'
+  # The global name of your site. Used as a fallback in page titles and copyright footers.
+  name: 'Jeremy Ramesh'
+
+  # The exact URL where your site lives. Astro uses this to generate absolute URLs 
+  # (like for your sitemap.xml or RSS feed) which SEO relies on.
+  site: 'https://portfolio.shakti-3xtorris.workers.dev'
+
+  # The root path. If your site was at github.io/portfolio, this would be '/portfolio/'. 
+  # Since you are at the root of your workers.dev domain, '/' is correct.
   base: '/'
+
+  # Decides if URLs look like `/about/` (true) or `/about` (false). 
+  # Keeping it false is the modern standard for clean URLs.
   trailingSlash: false
 
+  # This links your site to Google Search Console to prove you own it.
   googleSiteVerificationId: orcPxI47GSa-cRvY11tUe6iGg2IO_RPvnA1q95iEM3M
 
-# Default SEO metadata
+# ==============================================================================
+# DEFAULT SEO METADATA
+# ==============================================================================
 metadata:
   title:
-    default: AstroWind
-    template: '%s — AstroWind'
-  description: "\U0001F680 Suitable for Startups, Small Business, Sass Websites, Professional Portfolios, Marketing Websites, Landing Pages & Blogs."
+    # If a page doesn't have a specific title, it defaults to this.
+    default: 'Jeremy Ramesh — Cybersecurity and IOT student'
+    # The blueprint for page titles. E.g., if you are on the About page, 
+    # it becomes "About — Jeremy Ramesh". '%s' is the placeholder for the page name.
+    template: '%s — Jeremy Ramesh'
+  
+  # The snippet that shows up on Google under your link.
+  description: "Portfolio of Jeremy Ramesh: a Cybersecurity/IOT student hunting for greater achievements"
+  
   robots:
+    # Tells Google and other search engines "Yes, you are allowed to read and list this site."
     index: true
     follow: true
+  
+  # "OpenGraph" determines how your site looks when you share the link on Discord, LinkedIn, iMessage, etc.
   openGraph:
-    site_name: Jeremy Ramesh
+    site_name: Jeremy Ramesh's Cybersecurity Portfolio
     images:
+      # The preview image that shows up in the link card. Make sure this image actually exists in src/assets/images!
       - url: '~/assets/images/default.png'
         width: 1200
         height: 628
-    type: website
+    type: website # Tells platforms this is a standard website, not a video or article.
+  
+  # Specific settings for how your link looks when shared on X/Twitter.
   twitter:
-    handle: '@arthelokyo'
+    handle: '@arthelokyo' # Your Twitter handle
     site: '@arthelokyo'
-    cardType: summary_large_image
+    cardType: summary_large_image # Makes the Twitter link preview show a big, wide image instead of a tiny square.
 
+# ==============================================================================
+# LOCALIZATION (Languages)
+# ==============================================================================
 i18n:
-  language: en
-  textDirection: ltr
+  language: en # Tells browsers the site is in English. Good for accessibility and screen readers.
+  textDirection: ltr # "Left to right". You'd change this to 'rtl' if writing in Arabic or Hebrew.
 
+# ==============================================================================
+# APP SETTINGS (AstroWind specific routing)
+# ==============================================================================
 apps:
   blog:
-    isEnabled: true
-    postsPerPage: 6
+    isEnabled: true # Turns on the entire blog system. Change to false if you just want a 1-page portfolio.
+    postsPerPage: 6 # How many blog cards show up before creating a "Page 2" pagination link.
 
     post:
       isEnabled: true
-      permalink: '/%slug%' # Variables: %slug%, %year%, %month%, %day%, %hour%, %minute%, %second%, %category%
+      # The URL structure for individual posts. %slug% uses the markdown file name. 
+      # E.g., 'my-post.md' becomes 'yoursite.dev/my-post'.
+      permalink: '/%slug%'
       robots:
-        index: true
+        index: true # Tells Google to index your individual blog posts.
 
     list:
       isEnabled: true
-      pathname: 'blog' # Blog main path, you can change this to "articles" (/articles)
+      # The URL for your main blog feed page. (e.g., yoursite.dev/blog)
+      pathname: 'blog'
       robots:
         index: true
 
     category:
       isEnabled: true
-      pathname: 'category' # Category main path /category/some-category, you can change this to "group" (/group/some-category)
+      # The URL for grouping posts. (e.g., yoursite.dev/category/tutorials)
+      pathname: 'category'
       robots:
         index: true
 
     tag:
       isEnabled: true
-      pathname: 'tag' # Tag main path /tag/some-tag, you can change this to "topics" (/topics/some-category)
+      # The URL for tag pages. (e.g., yoursite.dev/tag/javascript)
+      pathname: 'tag'
       robots:
+        # Set to false here to prevent "Duplicate Content" SEO penalties, 
+        # since tags often just show the exact same lists as categories.
         index: false
 
+    # Automatically shows a "You might also like..." section at the bottom of blog posts.
     isRelatedPostsEnabled: true
     relatedPostsCount: 4
 
+# ==============================================================================
+# ANALYTICS
+# ==============================================================================
 analytics:
   vendors:
     googleAnalytics:
-      id: null # or "G-XXXXXXXXXX"
+      # If you want to track visitors, replace 'null' with your tracking ID (e.g., "G-123456789"). 
+      # AstroWind automatically injects the Google tracking script if you provide an ID.
+      id: null 
 
+# ==============================================================================
+# USER INTERFACE
+# ==============================================================================
 ui:
-  theme: 'system' # Values: "system" | "light" | "dark" | "light:only" | "dark:only"
+  # Controls the Dark/Light mode toggle. 'system' means it reads the user's OS preference.
+  # You could force 'dark:only' if you want a strict "hacker/cyber" aesthetic!
+  theme: 'system'
