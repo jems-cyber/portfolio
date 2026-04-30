@@ -10,7 +10,7 @@ import CallToAction from '~/components/widgets/CallToAction.astro';
 
 // We updated the metadata to reflect your brand, not AstroWind's.
 const metadata = {
-  title: 'Jeremy Ramesh — Web Developer & Node.js Expert',
+  title: 'Jeremy Ramesh',
   ignoreTitleTemplate: true,
 };
 ---
@@ -29,12 +29,12 @@ const metadata = {
     image={{ src: '~/assets/images/hero-image.png', alt: 'Jeremy Ramesh' }}
   >
     <Fragment slot="title">
-      Hi, I'm <span class="text-accent dark:text-white highlight">Jeremy Ramesh</span>
+      Hi, I'm <span class="text-accent dark:text-white highlight">Jeremy Ramesh ;)</span>
     </Fragment>
 
     <Fragment slot="subtitle">
-      <span class="font-semibold">Web Developer & Node.js Enthusiast.</span>
-      I specialize in building fast, secure, and scalable web applications using modern tools like Astro and Tailwind CSS.
+      <span class="font-semibold"> Cybersecurity & IOT student'</span>
+      Fluent in C, familiar with Docker, ZFS, Crowdsec and Caddy find here the tools i've developped as well as my ongoing and finished projects. 
     </Fragment>
   </Hero>
 
@@ -46,13 +46,12 @@ const metadata = {
     title="My Tech Stack"
     subtitle="The languages and frameworks I use to bring ideas to life."
     items={[
-      { title: 'Node.js', description: 'Backend development, REST APIs, and server-side logic.', icon: 'tabler:brand-nodejs' },
-      { title: 'Astro', description: 'Island architecture for shipping zero-JS by default.', icon: 'tabler:rocket' },
-      { title: 'Tailwind CSS', description: 'Rapid, responsive UI development.', icon: 'tabler:brand-tailwind' },
+      { title: 'Debian/Mint', description: 'OS architecture, user and file rights, sftp, samba configurations.', icon: 'tabler:brand-nodejs' },
+      { title: 'C & Python', description: 'Developped scripts for my OSINT tool', icon: 'tabler:rocket' },
+      { title: 'Cybersecurity', description: 'Gobuster, Nmap, OSINT', icon: 'tabler:shield-lock' },
       { title: 'Cybersecurity', description: 'Building with security best practices in mind.', icon: 'tabler:shield-lock' },
     ]}
   />
-
 
   <!-- CONTENT WIDGET: Repurposed for an "About Me" section -->
   <!-- 'isReversed' puts the image on the left and text on the right -->
@@ -105,7 +104,7 @@ const metadata = {
       { variant: 'primary', text: 'Email Me', href: 'mailto:your.email@example.com', icon: 'tabler:mail' },
     ]}
   >
-    <Fragment slot="title">Let's build something great.</Fragment>
+    <Fragment slot="title">Let's merge goals.</Fragment>
     <Fragment slot="subtitle">Currently open for new opportunities and collaborations.</Fragment>
   </CallToAction>
 
