@@ -1,8 +1,8 @@
 export const headerData = {
   links: [
     // Simple, flat links. No massive dropdown menus.
-    { text: 'About', href: '/#about' },
-    { text: 'Tech Stack', href: '/#features' },
+    { text: 'About me', href: '/#about' },
+    { text: 'My skills', href: '/#features' },
     { text: 'Projects', href: '/#projects' },
     { text: 'Contact me' , href: '/#contact' }
   ],
