@@ -69,12 +69,12 @@ const metadata = {
     <div class="grid gap-6 row-gap-5 md:grid-cols-2 lg:grid-cols-3">
       {projects.map((project) => (
         <article class="mb-6 transition hover:shadow-lg rounded-2xl bg-white dark:bg-slate-900 shadow-md border border-gray-200 dark:border-gray-700">
-          <a href={`/project/${project.slug}`} class="block overflow-hidden rounded-t-2xl">
+          <a href={`/project/${project.id}`} class="block overflow-hidden rounded-t-2xl">
             <img src={project.data.image} class="object-cover w-full h-48 transition hover:scale-105 duration-300" alt={project.data.title} />
           </a>
           <div class="p-6">
             <h3 class="mb-2 text-xl font-bold leading-tight sm:text-2xl font-heading">
-              <a href={`/project/${project.slug}`} class="hover:text-primary transition ease-in-duration-200">
+              <a href={`/project/${project.id}`} class="hover:text-primary transition ease-in-duration-200">
                 {project.data.title}
               </a>
             </h3>
@@ -90,7 +90,7 @@ const metadata = {
             </div>
             
             <!-- Link to detailed tutorial page -->
-            <a href={`/project/${project.slug}`} class="inline-flex items-center font-medium text-primary hover:underline">
+            <a href={`/project/${project.id}`} class="inline-flex items-center font-medium text-primary hover:underline">
               More explanation
               <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
             </a>

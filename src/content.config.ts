@@ -1,7 +1,6 @@
 import { z, defineCollection } from 'astro:content';
-import { glob } from 'astro/loaders'; // Astro v5 Loader!
+import { glob } from 'astro/loaders';
 
-// Keeping your metadata definition intact just in case you use it later
 const metadataDefinition = () =>
   z.object({
     title: z.string().optional(),
@@ -19,18 +18,17 @@ const metadataDefinition = () =>
     twitter: z.object({ handle: z.string().optional(), site: z.string().optional(), cardType: z.string().optional() }).optional(),
   }).optional();
 
-// Astro v5 Collection Definition
 const project = defineCollection({
-  // Tell Astro exactly where to load the files from
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/project' }), 
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/project' }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
     image: z.string(),
     skills: z.array(z.string()),
-    // Using z.coerce.date() is safer in Astro 5 for parsing string dates to Date objects
-    publishDate: z.coerce.date().optional(), 
+    publishDate: z.coerce.date().optional(),
     tags: z.array(z.string()).optional(),
+    // ADDED THIS: Now AstroWind's SEO component won't crash when it looks for metadata
+    metadata: metadataDefinition(), 
   }),
 });
 
