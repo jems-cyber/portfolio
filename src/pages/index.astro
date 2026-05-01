@@ -1,20 +1,22 @@
 ---
 // 1. IMPORTS
 import Layout from '~/layouts/PageLayout.astro';
-import Hero from '~/components/widgets/Hero.astro';
 import Features from '~/components/widgets/Features.astro';
-import Content from '~/components/widgets/Content.astro';
 import Contact from '~/components/widgets/Contact.astro';
 
-import { getCollection } from 'astro:content'; // those two are for the project cards
-import { Image } from 'astro:assets'; // Astro's image component is great for optimization
+import { getCollection } from 'astro:content'; 
+import { Image } from 'astro:assets'; 
 
-//i dont know what this is : 
+// IMPORT YOUR PICTURE HERE:
+// AstroWind aliases '~' to the 'src' folder, so this points to src/assets/images/...
+import heroImage from '~/assets/images/hero-image.png';
+
+// Fetching your projects for the cards
 const projects = (await getCollection('project')).sort(
-  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
+  (a, b) => (b.data.publishDate?.valueOf() || 0) - (a.data.publishDate?.valueOf() || 0)
 );
 
-// We updated the metadata to reflect your brand.
+// Metadata
 const metadata = {
   title: 'Jeremy Ramesh — Cybersecurity & IOT',
   ignoreTitleTemplate: true,
@@ -25,23 +27,21 @@ const metadata = {
 
 <!-- HERO SECTION: Custom Side-by-Side Layout -->
 <section class="relative md:-mt-[76px] not-prose">
-  <!-- This padding ensures it sits nicely below the header -->
   <div class="relative max-w-7xl mx-auto px-4 sm:px-6 pt-32 md:pt-40 pb-12 md:pb-20">
-    
-    <!-- The Grid: 1 column on mobile, 2 columns on desktop -->
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-      
+
       <!-- LEFT SIDE: Text and Buttons -->
       <div class="text-center md:text-left">
         <h1 class="text-5xl md:text-6xl font-bold leading-tighter tracking-tighter mb-4 font-heading dark:text-gray-200">
           Hi, I'm <span class="text-accent dark:text-white highlight">Jeremy Ramesh ;)</span>
         </h1>
-        
+
         <p class="text-xl text-muted mb-8 dark:text-slate-300">
           <span class="font-semibold text-gray-900 dark:text-white">Cybersecurity & IOT student</span><br />
           Fluent in C, familiar with Docker, ZFS, Crowdsec and Caddy. Find here the tools I've developed as well as my ongoing and finished projects.
         </p>
-        
+
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
           <a class="btn btn-primary w-full sm:w-auto" href="#projects">
@@ -57,10 +57,10 @@ const metadata = {
 
       <!-- RIGHT SIDE: Picture -->
       <div class="relative flex justify-center mt-10 md:mt-0">
-        <!-- Using a standard img tag with Tailwind classes for easy styling -->
-        <img 
-          src="~/src/assets/images/hero-image.png" 
-          alt="Jeremy Ramesh" 
+        <!-- FIXED: Using Astro's native Image component -->
+        <Image
+          src={heroImage}
+          alt="Jeremy Ramesh"
           class="w-full max-w-sm md:max-w-md object-cover drop-shadow-xl"
         />
       </div>
@@ -90,7 +90,7 @@ const metadata = {
       <h2 class="text-3xl font-bold md:text-4xl md:leading-tight">Recent Projects</h2>
       <p class="text-muted dark:text-slate-400 mt-2 text-xl">A glimpse into my work.</p>
     </div>
-    
+
     <div class="grid gap-6 row-gap-5 md:grid-cols-2 lg:grid-cols-3">
       {projects.map((project) => (
         <article class="mb-6 transition hover:shadow-lg rounded-2xl bg-white dark:bg-slate-900 shadow-md border border-gray-200 dark:border-gray-700">
@@ -104,7 +104,7 @@ const metadata = {
               </a>
             </h3>
             <p class="text-muted dark:text-slate-400 text-base mb-4">{project.data.description}</p>
-            
+
             <!-- Skill Tags -->
             <div class="flex flex-wrap gap-2 mb-4">
               {project.data.skills.map((skill) => (
@@ -113,7 +113,7 @@ const metadata = {
                 </span>
               ))}
             </div>
-            
+
             <!-- Link to detailed tutorial page -->
             <a href={`/project/${project.id}`} class="inline-flex items-center font-medium text-primary hover:underline">
               More explanation
