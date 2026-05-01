@@ -16,7 +16,7 @@ export async function getStaticPaths() {
 // 2. Get the specific project data for the page being built
 const { project } = Astro.props;
 
-// 3. Render the markdown into HTML 
+// 3. Render the markdown into HTML
 const { Content } = await render(project);
 
 const metadata = {
@@ -26,6 +26,8 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
-  <!-- Pass the data to AstroWind's pre-built layout -->
-  <SinglePost post={{ ...project.data, slug: project.id, id: project.id, Content: Content }} />
+  <!-- FIX IS HERE: Open the tag, render Content inside, and close it -->
+  <SinglePost post={{ ...project.data, slug: project.id, id: project.id }}>
+    <Content />
+  </SinglePost>
 </Layout>
