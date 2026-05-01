@@ -6,6 +6,14 @@ import Features from '~/components/widgets/Features.astro';
 import Content from '~/components/widgets/Content.astro';
 import Contact from '~/components/widgets/Contact.astro';
 
+import { getCollection } from 'astro:content'; // those two are for the project cards
+import { Image } from 'astro:assets'; // Astro's image component is great for optimization
+
+//i dont know what this is : 
+const projects = (await getCollection('project')).sort(
+  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
+);
+
 // We updated the metadata to reflect your brand.
 const metadata = {
   title: 'Jeremy Ramesh — Cybersecurity & IOT',
@@ -51,47 +59,46 @@ const metadata = {
   />
 
 
-  <!-- PROJECTS SECTION: Summary Cards -->
-  <section id="projects" class="px-4 py-16 mx-auto max-w-7xl lg:py-20">
+<!-- PROJECTS SECTION (Summary Cards) -->
+  <section id="projects" class="px-4 py-16 mx-auto max-w-7xl lg:py-20 bg-slate-50 dark:bg-slate-950">
     <div class="flex flex-col mb-6 md:mb-12 text-center">
-      <p class="text-base text-secondary dark:text-blue-200 font-bold tracking-wide uppercase">Portfolio</p>
-      <h2 class="text-3xl md:text-4xl font-bold leading-tighter tracking-tighter mb-4 font-heading">Recent Projects</h2>
-      <p class="max-w-3xl mx-auto sm:text-center text-xl text-muted dark:text-slate-400">A look into the tools and applications I've built and documented.</p>
+      <h2 class="text-3xl font-bold md:text-4xl md:leading-tight">Recent Projects</h2>
+      <p class="text-muted dark:text-slate-400 mt-2 text-xl">A glimpse into my work.</p>
     </div>
     
     <div class="grid gap-6 row-gap-5 md:grid-cols-2 lg:grid-cols-3">
-      
-      <!-- PROJECT CARD 1 -->
-      <article class="mb-6 transition hover:shadow-lg rounded-2xl bg-white dark:bg-slate-900 shadow-md border border-gray-200 dark:border-gray-700">
-        <a href="/project/osint-tool" class="block overflow-hidden rounded-t-2xl">
-          <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="object-cover w-full h-48 transition hover:scale-105 duration-300" alt="OSINT Tool Project" />
-        </a>
-        <div class="p-6">
-          <h3 class="mb-2 text-xl font-bold leading-tight sm:text-2xl font-heading">
-            <a href="/project/osint-tool" class="hover:text-primary transition ease-in-duration-200">OSINT Reconnaissance Tool</a>
-          </h3>
-          <p class="text-muted dark:text-slate-400 text-base mb-4">A custom-built Python and C script for gathering open-source intelligence securely and efficiently.</p>
-          
-          <!-- Skill Tags -->
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Python</span>
-            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">C</span>
-            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Nmap</span>
-          </div>
-          
-          <!-- Link to detailed tutorial page -->
-          <a href="/project/osint-tool" class="inline-flex items-center font-medium text-primary hover:underline">
-            More explanation
-            <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+      {projects.map((project) => (
+        <article class="mb-6 transition hover:shadow-lg rounded-2xl bg-white dark:bg-slate-900 shadow-md border border-gray-200 dark:border-gray-700">
+          <a href={`/project/${project.slug}`} class="block overflow-hidden rounded-t-2xl">
+            <img src={project.data.image} class="object-cover w-full h-48 transition hover:scale-105 duration-300" alt={project.data.title} />
           </a>
-        </div>
-      </article>
-
-      <!-- You can copy/paste the <article> block above to add more projects! -->
-
+          <div class="p-6">
+            <h3 class="mb-2 text-xl font-bold leading-tight sm:text-2xl font-heading">
+              <a href={`/project/${project.slug}`} class="hover:text-primary transition ease-in-duration-200">
+                {project.data.title}
+              </a>
+            </h3>
+            <p class="text-muted dark:text-slate-400 text-base mb-4">{project.data.description}</p>
+            
+            <!-- Skill Tags -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              {project.data.skills.map((skill) => (
+                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+                  {skill}
+                </span>
+              ))}
+            </div>
+            
+            <!-- Link to detailed tutorial page -->
+            <a href={`/project/${project.slug}`} class="inline-flex items-center font-medium text-primary hover:underline">
+              More explanation
+              <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </a>
+          </div>
+        </article>
+      ))}
     </div>
   </section>
-
 
   <!-- CONTACT SECTION -->
   <Contact
