@@ -1,0 +1,31 @@
+---
+// src/pages/project/[id].astro
+import { getCollection, render } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import SinglePost from '~/components/blog/SinglePost.astro';
+
+// 1. Find all markdown files in src/content/project/
+export async function getStaticPaths() {
+  const projects = await getCollection('project');
+  return projects.map((project) => ({
+    params: { id: project.id }, // Maps the URL to the filename (e.g., /project/Circe)
+    props: { project },
+  }));
+}
+
+// 2. Get the specific project data for the page being built
+const { project } = Astro.props;
+
+// 3. Render the markdown into HTML 
+const { Content } = await render(project);
+
+const metadata = {
+  title: project.data.title,
+  description: project.data.description,
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Pass the data to AstroWind's pre-built layout -->
+  <SinglePost post={{ ...project.data, slug: project.id, id: project.id, Content: Content }} />
+</Layout>
