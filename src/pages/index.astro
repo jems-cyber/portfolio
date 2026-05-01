@@ -55,17 +55,19 @@ const metadata = {
         </div>
       </div>
 
-      <!-- RIGHT SIDE: Picture -->
-      <div class="relative flex justify-center mt-10 md:mt-0">
-        <!-- FIXED: Using Astro's native Image component -->
-        <Image
-          src={heroImage}
-          alt="Jeremy Ramesh"
-          class="w-full max-w-sm md:max-w-md object-cover drop-shadow-xl"
-        />
-      </div>
-
-    </div>
+	<!-- RIGHT SIDE: Picture -->
+	      <div class="relative flex justify-center mt-10 md:mt-0">
+		
+		<!-- Optional: A nice decorative background blob/circle -->
+		<div class="absolute inset-0 bg-blue-50 dark:bg-slate-800 rounded-full shadow-lg transform scale-95 -z-10"></div>
+		
+		<!-- Your Image -->
+		<Image
+		  src={heroImage}
+		  alt="Jeremy Ramesh"
+		  class="w-full max-w-sm md:max-w-md object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+		/>
+	      </div>
   </div>
 </section>
 
