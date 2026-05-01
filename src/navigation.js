@@ -4,7 +4,7 @@ export const headerData = {
     { text: 'About', href: '/#about' },
     { text: 'Tech Stack', href: '/#features' },
     { text: 'Projects', href: '/#projects' },
-    { text: 'Blog', href: '/blog' },
+    { text: 'Contact me' , href: '/#contact' }
   ],
   actions: [
     // The button on the far right of the header
