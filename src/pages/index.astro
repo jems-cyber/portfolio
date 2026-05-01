@@ -23,26 +23,51 @@ const metadata = {
 
 <Layout metadata={metadata}>
 
-  <!-- HERO WIDGET: Your main introduction -->
-  <Hero
-    actions={[
-      // Primary button stands out more. Linking to projects section.
-      { variant: 'primary', text: 'View My Work', href: '#projects', icon: 'tabler:briefcase' },
-      // Secondary button links to your GitHub.
-      { text: 'GitHub', href: 'https://github.com/jems-cyber', target: '_blank', icon: 'tabler:brand-github' },
-    ]}
-    // Make sure to put a cool photo of yourself or a logo here!
-    image={{ src: '~/assets/images/hero-image.png', alt: 'Jeremy Ramesh' }}
-  >
-    <Fragment slot="title">
-      Hi, I'm <span class="text-accent dark:text-white highlight">Jeremy Ramesh ;)</span>
-    </Fragment>
+<!-- HERO SECTION: Custom Side-by-Side Layout -->
+<section class="relative md:-mt-[76px] not-prose">
+  <!-- This padding ensures it sits nicely below the header -->
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 pt-32 md:pt-40 pb-12 md:pb-20">
+    
+    <!-- The Grid: 1 column on mobile, 2 columns on desktop -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+      
+      <!-- LEFT SIDE: Text and Buttons -->
+      <div class="text-center md:text-left">
+        <h1 class="text-5xl md:text-6xl font-bold leading-tighter tracking-tighter mb-4 font-heading dark:text-gray-200">
+          Hi, I'm <span class="text-accent dark:text-white highlight">Jeremy Ramesh ;)</span>
+        </h1>
+        
+        <p class="text-xl text-muted mb-8 dark:text-slate-300">
+          <span class="font-semibold text-gray-900 dark:text-white">Cybersecurity & IOT student</span><br />
+          Fluent in C, familiar with Docker, ZFS, Crowdsec and Caddy. Find here the tools I've developed as well as my ongoing and finished projects.
+        </p>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+          <a class="btn btn-primary w-full sm:w-auto" href="#projects">
+            <svg class="w-5 h-5 mr-2 -ml-1.5 inline-block" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2"></path><line x1="12" y1="12" x2="12" y2="12.01"></line><path d="M3 13a20 20 0 0 0 18 0"></path></svg>
+            View My Work
+          </a>
+          <a class="btn w-full sm:w-auto" href="https://github.com/jems-cyber" target="_blank" rel="noopener">
+            <svg class="w-5 h-5 mr-2 -ml-1.5 inline-block" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg>
+            GitHub
+          </a>
+        </div>
+      </div>
 
-    <Fragment slot="subtitle">
-      <span class="font-semibold"> Cybersecurity & IOT student</span><br />
-      Fluent in C, familiar with Docker, ZFS, Crowdsec and Caddy. Find here the tools I've developed as well as my ongoing and finished projects.
-    </Fragment>
-  </Hero>
+      <!-- RIGHT SIDE: Picture -->
+      <div class="relative flex justify-center mt-10 md:mt-0">
+        <!-- Using a standard img tag with Tailwind classes for easy styling -->
+        <img 
+          src="/src/assets/images/hero-image.png" 
+          alt="Jeremy Ramesh" 
+          class="w-full max-w-sm md:max-w-md object-cover drop-shadow-xl"
+        />
+      </div>
+
+    </div>
+  </div>
+</section>
 
   <!-- FEATURES WIDGET: Your Tech Stack -->
   <Features
