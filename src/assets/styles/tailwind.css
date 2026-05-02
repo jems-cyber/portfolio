@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Optional: Tweak light mode here if you want */
+  }
+
+  /* Target Dark Mode specifically */
+  .dark {
+    --aw-color-bg-page: #34221C; /* Your Deep Umber */
+    --aw-color-bg-page-dark: #261814; /* Slightly darker version for depth */
+    --aw-color-text-page: rgb(245, 245, 240); /* Off-white for better legibility on brown */
+    --aw-color-text-muted: rgb(245, 245, 240, 0.7);
+    
+    /* Apply a subtle gradient to the whole body so it isn't a flat brown */
+    background: radial-gradient(circle at top right, #4A0404 0%, #34221C 100%);
+    background-attachment: fixed;
+  }
+}
+
 @layer utilities {
   .bg-page {
     background-color: var(--aw-color-bg-page);
@@ -22,10 +40,12 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center rounded-full border-gray-400 border bg-transparent font-medium text-center text-base text-page leading-snug transition py-3.5 px-6 md:px-8 ease-in duration-200 focus:ring-blue-500 focus:ring-offset-blue-200 focus:ring-2 focus:ring-offset-2 hover:bg-gray-100 hover:border-gray-600 dark:text-slate-300 dark:border-slate-500 dark:hover:bg-slate-800 dark:hover:border-slate-800 cursor-pointer;
+    /* Using a border color that matches the warmth of your new palette */
+    @apply inline-flex items-center justify-center rounded-full border-gray-400 border bg-transparent font-medium text-center text-base text-page leading-snug transition py-3.5 px-6 md:px-8 ease-in duration-200 focus:ring-red-900 focus:ring-offset-orange-900 focus:ring-2 focus:ring-offset-2 hover:bg-white/10 hover:border-white/20 dark:text-slate-300 dark:border-white/20 dark:hover:bg-white/5 cursor-pointer;
   }
 
   .btn-primary {
+    /* Shift primary buttons to feel more 'Oxblood' compatible */
     @apply btn font-semibold bg-primary text-white border-primary hover:bg-secondary hover:border-secondary hover:text-white dark:text-white dark:bg-primary dark:border-primary dark:hover:border-secondary dark:hover:bg-secondary;
   }
 
@@ -38,18 +58,18 @@
   }
 }
 
+/* Updated Header for Scroll - Removed the blue tint */
 #header.scroll > div:first-child {
   @apply bg-page md:bg-white/90 md:backdrop-blur-md;
-  box-shadow: 0 0.375rem 1.5rem 0 rgb(140 152 164 / 13%);
+  box-shadow: 0 0.375rem 1.5rem 0 rgb(0 0 0 / 13%);
 }
+
 .dark #header.scroll > div:first-child,
 #header.scroll.dark > div:first-child {
-  @apply bg-page md:bg-[#030621e6] border-b border-gray-500/20;
+  /* Replaced #030621e6 (blue) with a transparent Umber to match your theme */
+  @apply bg-[#34221ce6] md:backdrop-blur-md border-b border-white/10;
   box-shadow: none;
 }
-/* #header.scroll > div:last-child {
-  @apply py-3;
-} */
 
 #header.expanded nav {
   position: fixed;
@@ -84,8 +104,6 @@
 [data-aw-toggle-menu].expanded g > path:last-child {
   @apply rotate-45 translate-y-[-8px] translate-x-[14px];
 }
-
-/* To deprecated */
 
 .dd *:first-child {
   margin-top: 0;
