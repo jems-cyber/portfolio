@@ -9,6 +9,8 @@
 
   /* Target Dark Mode specifically */
   .dark {
+    --aw-color-primary: #800020; /*oxblood ig*/
+    --aw-color-secondary: #4A0404; /*just a deeper oxblood lol for hover states*/
     --aw-color-bg-page: #34221C; /* Your Deep Umber */
     --aw-color-bg-page-dark: #261814; /* Slightly darker version for depth */
     --aw-color-text-page: rgb(245, 245, 240); /* Off-white for better legibility on brown */
