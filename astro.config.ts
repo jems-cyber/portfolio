@@ -11,6 +11,8 @@ import icon from 'astro-icon';
 import compress from 'astro-compress';
 import type { AstroIntegration } from 'astro';
 
+import remarkWikiLink from 'remark-wiki-link';
+
 import astrowind from './vendor/integration';
 
 import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin, lazyImagesRehypePlugin } from './src/utils/frontmatter';
@@ -23,15 +25,43 @@ const hasExternalScripts = false;
 const whenExternalScripts = (items: (() => AstroIntegration) | (() => AstroIntegration)[] = []) =>
   hasExternalScripts ? (Array.isArray(items) ? items.map((item) => item()) : [items()]) : [];
 
+// Reusable Obsidian wiki-link parsing configuration for both MD and MDX files
+const obsidianWikiLinkConfig = [
+  remarkWikiLink,
+  {
+    pathFormat: 'obsidian-short',
+    newClassName: 'internal-link',
+    wikiLinkClassName: 'internal-link',
+    
+    // Tell the plugin how to resolve file names to URLs
+    pageResolver: (name: string) => {
+      return [name.trim().replace(/ /g, '%20')];
+    },
+
+    // Generate the exact URL string that Astro's router demands
+    hrefTemplate: (permalink: string) => {
+      // If it's an image, point it relatively into your local attachments folder
+      if (/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(permalink)) {
+        return `./attachments/${permalink}`;
+      }
+      // If it's a regular text note wiki link, give it the absolute /project/ path prefix
+      return `/project/${permalink}`;
+    },
+  },
+];
+
 export default defineConfig({
   output: 'static',
+  trailingSlash: 'never',
 
   integrations: [
     tailwind({
       applyBaseStyles: false,
     }),
     sitemap(),
-    mdx(),
+    mdx({
+      remarkPlugins: [obsidianWikiLinkConfig],
+    }),
     icon({
       include: {
         tabler: ['*'],
@@ -78,7 +108,7 @@ export default defineConfig({
   },
 
   markdown: {
-    remarkPlugins: [readingTimeRemarkPlugin],
+    remarkPlugins: [readingTimeRemarkPlugin, obsidianWikiLinkConfig],
     rehypePlugins: [responsiveTablesRehypePlugin, lazyImagesRehypePlugin],
   },
 

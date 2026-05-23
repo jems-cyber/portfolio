@@ -1,0 +1,201 @@
+{
+  "main": {
+    "id": "eab811dd328d9563",
+    "type": "split",
+    "children": [
+      {
+        "id": "ee23f78c439e2c14",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0a4079e8723ab4ab",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Circe.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Circe"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "406bce008cc7fc85",
+    "type": "split",
+    "children": [
+      {
+        "id": "4305826e674e8613",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e93dd7d7141a4d5e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "324b333a0d87192a",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "51e2a4129ddac648",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "6faaabb22a3ec004",
+    "type": "split",
+    "children": [
+      {
+        "id": "a09bb87b9a83ab30",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e51cc757b7b5b1bb",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Circe.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Circe"
+            }
+          },
+          {
+            "id": "4104af04679f33f3",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Circe.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Circe"
+            }
+          },
+          {
+            "id": "154fe87db77e89dc",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "84e6c80d92185f2b",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "a82e4ae8a9573442",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Circe.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Circe"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "0a4079e8723ab4ab",
+  "lastOpenFiles": [
+    "Circe.md~",
+    "attachments/Pasted image 20260216192225.png",
+    "attachments/Pasted image 20260412154514.png",
+    "attachments/Pasted image 20260412211251.png",
+    "attachments/Pasted image 20260412154407.png",
+    "attachments/Pasted image 20260412160725.png",
+    "attachments/Pasted image 20260412154556.png",
+    "attachments/Pasted image 20260222163607.png",
+    "attachments/Pasted image 20260216161805.png",
+    "Circe.md",
+    "attachments/Pasted image 20260412211256.png",
+    "attachments/Pasted image 20260412154705.png"
+  ]
+}

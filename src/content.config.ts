@@ -20,16 +20,18 @@ const metadataDefinition = () =>
 
 const project = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/project' }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    image: z.string(),
-    skills: z.array(z.string()),
-    publishDate: z.coerce.date().optional(),
-    tags: z.array(z.string()).optional(),
-    // ADDED THIS: Now AstroWind's SEO component won't crash when it looks for metadata
-    metadata: metadataDefinition(), 
-  }),
+  // FIX HERE: Turn the schema into a function to use Astro's native image engine
+  schema: ({ image }) => 
+    z.object({
+      title: z.string(),
+      description: z.string(),
+      // FIX HERE: This allows either local paths (./attachments/pic.png) or external URLs
+      image: image().or(z.string()), 
+      skills: z.array(z.string()),
+      publishDate: z.coerce.date().optional(),
+      tags: z.array(z.string()).optional(),
+      metadata: metadataDefinition(),
+    }),
 });
 
 export const collections = {

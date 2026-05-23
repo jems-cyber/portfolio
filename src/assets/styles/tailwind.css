@@ -3,6 +3,19 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth; 
+  }
+
+/* The Magic Bullet: Target ANY element inside your blog 
+   that has an ID (this catches both auto-generated headings 
+   AND your manual <a> tags).
+*/
+
+  .prose [id] {
+    scroll-margin-top: 120px !important; 
+  }
+
   :root {
     /* Optional: Tweak light mode here if you want */
   }
