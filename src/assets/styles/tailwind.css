@@ -123,3 +123,27 @@
 .dd *:first-child {
   margin-top: 0;
 }
+
+/* Custom Typography Spacing Overrides */
+.prose {
+  /* Tightens the overall line height of the text */
+  line-height: 1.6 !important; 
+}
+
+.prose p {
+  /* Reduces the huge gaps between text paragraphs */
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+}
+
+.prose pre {
+  /* Reduces the massive space before and after code blocks */
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  /* Slightly tightens the space above headings so they sit closer to the previous section */
+  margin-top: 1.5em !important;
+  margin-bottom: 0.5em !important;
+}

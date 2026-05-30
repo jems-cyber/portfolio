@@ -9,11 +9,11 @@ publishDate: 2023-11-01
 Problem  : Through the last few decades, several data breaches from big companies like google have been discoved, not only that but google is complicit of training their AI bots on the data you store on their cloud and they coud potentialy have acess to your sensible informations. 
 
 Solution  :  You can make your own google drive ;) here, follow me 
-
 # Summary 
+
 [Phase 1 debian install + mirror problem solving](#phase-1)
 
-[[#Phase 2 SSH and tailscale setup]]
+[Phase 2 SSH and tailscale setup]
 
 [[#Phase 2 formating hard drives + RAID1 with ZFS]]
 
@@ -33,32 +33,32 @@ Solution  :  You can make your own google drive ;) here, follow me
 ### Phase 1 debian install + mirror problem solving
 
 This step is widely documented on the web, so i will skip the documentation and only describe how i solved the problems i've encountered.
-
 #### A mirror problem 
 
- problem : I couldn't acess debian mirrors all over the world... which means i couldn't acess the usual packages i have to install.. thus no way to install vim, sudo,  or anything, no NOTHING...
+ problem : I couldn't acess debian mirrors all over the world... which means i couldn't acess the usual packages i have to install.
 
-solution : since you can't install any packages, because you can't acess mirrors.
-BUT i had ethernet, so all i needed to do is go acess the mirror links manually for each package.
+solution : I still had ethernet, so all i needed to do is to acess the sources debian uses to install packages.
 let's acess those sources :
-
-``` 
+``` bash
 nano /etc/apt/sources.list
 ```
-(nano because vim isnt installed...)
+then we add the sources manually (you can get those on the official Debian wiki) 
+just copy and paste this :
 
-then we add the sources manually : 
-you can get those on the official Debian wiki 
-this is the old way of doing it :
-```
+attention, les NOTICES NE MARCHENT PAS SUR ASTRO 
+>[!notice]
+> notice : using a .list is the "old" way, the newer is a .sources + different synthax (will be shown below) 
+
+```bash
+#old way (.list)
 deb http://deb.debian.org/debian/ bookworm main
 deb http://security.debian.org/debian-security bookworm-security main
 deb http://deb.debian.org/debian/ bookworm-updates main
 ```
-(just copy and paste this) 
 
-and the new way is just a format change, instead of a .list file you use a .sources and write in it:
-```
+the new way is just a format change, instead of a .list file, write a .sources and in it paste :
+```bash
+#new way (.sources)
 Types: deb deb-src
 URIs: https://deb.debian.org/debian
 Suites: trixie trixie-updates
@@ -75,98 +75,75 @@ Components: main non-free-firmware
 Enabled: yes
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 ```
-BOUM now you have all packages :D
+(we later added the "contrib-non-free" tag because ZFS needs it, even if it's free)
 
 don't forget to update : 
-```
+```bash
 apt update
 apt upgrade
 ```
-i was then able to install vim :) 
-
 -----------------
 ### Phase 2 : SSH and tailscale setup 
-At the time i started this phase, my server was sitting inside my school, plugged in through ethernet. I wanted to be able to work on it from any classroom (aka not be physically connected to the server to work on it). So let's set up our ssh protocol : 
+Since my server first used to sit in my school, i wanted to acess it from anywhere in the local network. So I set up the ssh protocol : 
 #### first step : Getting my server's ip adress
-```
+```bash
 ip addr
 ```
-which gives back : 
-![Alternative Text](./attachments/Pasted image 20260216161805.png)
-
-![[Pasted image 20260216161805.png]]
-
-. " UP " means i am connected to the internet (thanks to the ethernet cable
-. inet 127.26.77.1/20 -> 127.26.77.1 is my ip adress !
+which shows : 
+![A description of the Circe image](../../assets/images/Circe_pics/ipaddr.png)
+=> 127.26.77.1 is my ip adress !
 #### second step : setting up ssh
-
-```
+```bash
 apt install openssh-server
 ```
-
-and test it out by connecting from my laptop :
-
-```
-ssh bow@172.26.77.1
-```
-(bow is the user)
-
-#### third step : setting up tailscail
-
-i needed to work on CIRCE even on the weekends, aka when im home home (paris) but if i open my ssh port for the entire internet, it would be a huge security concern. Thus why we install tailscale, which creates a "tunnel" (safe). we will go for an open source version later on when i'll have time to do my research :)-
+ssh works :)
+#### third step : setting up tailscaile
+I needed to ssh into my server even if i wasn't connected to the local network, but opening an ssh port to the world is unsafe practice. Since i didn't have enough knowledge about open source alternatives i used tailscale.
 
 to install tailscale : 
-```
+```bash
 apt update && apt install curl -y
 curl -fsSL https://tailscale.com/install.sh | sh
 ```
-
 once installed, start it up :
-```
+```bash
 sudo tailscale up
 ```
+then the terminal will give you an url, click on it
+![[tailscaile.png]]
+In there, Tailscale will give your server a new "local" ip, that you can use to ssh from anywhere :)
+### Phase 2 formating hard drives + RAID1 with ZFS
 
-then the terminal will give you an url and you just have to paste that url on your laptop in the browser (where you are ALREADY logged in tailscail)
-![[Pasted image 20260216192225.png]]
-and bim, it shouls show you the NAS  new ip adress on the website
-now you can  ssh into it safely from anywhere :) (from any pc that has tailscale operational)
-
-### Phase 2 inserting hard drives/formating + RAID1 with ZFS
-
-#### 1st step : formating the disks : 
-I physically connected two HDD disks of 250gb each, but the NAS isn't picking them up
+#### 1step step : formating the disks 
+I physically connected two HDD disks of 250gb each, but the server isn't picking them up
 so, what's up ?
-
 first, run : 
-```
+```bash
 sudo fdisk -l
+# gives information about the disks onboard
 ```
--> gives info about the disks onboard
-
 this gave me :
-
-![[Pasted image 20260218105713.png]]
-
-Here we see that debian is installed on my 500gb hdd,  so now let's format (= delete everything) on the two hdd disks i added. ( they are named /dev/sdb and /sdc BE CAREFULL BECASE SDA IS THE DEBIAN DISK DON'T touch it.
+![[fdisk.png]]
+Here we see that debian is installed on my 500gb hdd,  so now let's format (= delete everything) on the two hdd disks i added. ( they are named /dev/sdb and /sdc) BE CAREFULL BECASE SDA IS THE DEBIAN DISK SO DON'T touch it.
 
 to format  : 
-```
+```bash
 sudo wipefs -a /dev/sdb
-sudo wipefs -a /dev/sdc
+zsudo wipefs -a /dev/sdc
 ```
 
-However, if we run lsblk we notice that there is "sdb2" which means sdb has a partition and it hasnt been erased : 
-```
-lsblk
-```
-![[Pasted image 20260218152312.png]]
-Not to worry tho, ZFS will take care of erasing the partition when creating the pool.
-#### 2nd step : mounting the disks with ZFS + problem solving
+However, if we run ```lsblk```, 
+we notice that there is a "sdb2" which means sdb has a partition and it hasn't been erased : 
+![[lsblk.png]]
+ZFS will take care of erasing the partition when creating the pool. 
+(it's automatic)
+#### 2nd step : setting up RAID1 with ZFS + problem solving
+-> what is RAID
+to mount the disks,  we need to first create a "pool" using the ZFS tool.  ( ZFS is the new tool that regroups fdisk, mdadm and mkfs.ext4 under the same umbrella)
 
-to mount the disks,  we need to create a "pool" first using the ZFS tool.  ( ZFS is the new tool that regroups fdisk, mdadm and mkfs.ext4 under the same umbrella)
-
-first install ZFS tool : 
-```
+##### a. installing zfs + problem encountered 
+to install ZFS : 
+```bash
 sudo apt update
 sudo apt upgrade
 sudo apt install zfs-dkms zfsutils-linux
@@ -174,110 +151,102 @@ sudo apt install zfs-dkms zfsutils-linux
 
 **problem encountered**
      running this gave me a problem because i configured my debian .sources file to only get free packages. But aparantly ZFS needs the "contrib non-free" tag.  so let's go back to our package .sources : 
-     ![[Pasted image 20260218121003.png]]
+     ![[sources_contrib.png]]
      we just added "contrib non-free"
     zfs should work now :) 
 
-  Now let's create a storage "pool" for the two 250gb disks. 
-  ```
+##### b. creating a zfs pool (= mounting)
+Once zfs installed, let's create a storage "pool" for the two 250gb disks, zfs automatically mounts the disks when it creates a pool.
+  ```bash
 zpool create -f tank mirror /dev/sdb /dev/sdc
   ```
- Altoough i've heard that if you used sda sdb sdc, and then unplugged your drives and changed the order (physically), it would change their names (sda becomes sdb etc..) to avoid this we used to name them by their entire disk id (unique), even if this problem should be solved by modern ZFS, i wnana try the old way so:
+ Altough i've heard that if you used sda sdb sdc, and then unplugged your drives and changed the order (physically), it would change their names (sda becomes sdb etc..) to avoid this we used to run commands using their disk id (never changes), even if this problem should be solved by modern ZFS, i wanted to try the old way so :
 
-let's go to 
-```
-/dev/disk/by-id/
-```
-and use : 
-```
-ls
-```
-
-which gives :
-![[Pasted image 20260218161242.png]]
-
-here, its written in the name id who is 500 (ST'500'...) for exemple
-and also the partition on one of the 250gb disk that wasn't erased
-so :
-```
-zpool create <name of the pool> mirror /dev/disk/by-id/ata-ST3250318AS_5VY5KNNV /dev/disk/by-id/ata-WDC_WD2500AAKX-603CA0_WD-WMAYV3657019
-```
-which you get by running the following command : 
-
-```
+first let's find out which serial is each hdd : 
+```bash
 lsblk --nodeps -o name,serial
 ```
+```--nodeps``` (no dependencies) : only show the parent drives, no partitions
+```-o name,serial``` only outputs the name and serial column of lsblk
 
-![[Pasted image 20260218153652.png]]
-bim now you can use the HDD id instead of its name.
+![[lsblk_longer_command.png]]
+now you know each hdd serial number, now let's feed the zfs the full hdd ID :
 
- it worked, and gave : 
- ![[Pasted image 20260218164444.png]]
- uh just know it worked because the part2 is gone, also if you see part1 and part9 idk what it means but its allegedly normal from zfs, search it up i tought it as an automatic partition which it is but the pt9 is for some kind of metadata idk twin look it up im tired ...
+```bash
+cd /dev/disk/by-id/
+ls
+```
+which gives :
+![[disk_ls.png]]
+> how to read this ?
+> [BUS]-[MANUFACTURER MODEL]-[SERIAL] is the format all hdd/nvme use in linux,
+> for exemple here : 
+> "ata" is the bus type, could be usb 
+> " ST500DM002-1BD142" is the manufacturer model, ST for Seagate
+> "Z3TYC1B3" is the hdd serial 
 
-bim you got it :))
+Once you copied the ID matching to your serials :
+```bash
+#replace my disk id with yours
+zpool create <name of your pool> mirror /dev/disk/by-id/ata-ST3250318AS_5VY5KNNV /dev/disk/by-id/ata-WDC_WD2500AAKX-603CA0_WD-WMAYV3657019
+```
 
-now you can just open it in your file manager using sftp://your-username@your-server-ip in the path bar :3 BOUMMMM you can just drag and drop files now URGH this awesome you now have a mirrored NAS.
+#### c. testing it out by sftp
+Congrats, we just created a mirrored disk NAS, you can just open it in your file manager on your laptop (or any device that has tailscale running / or any devices on the same network) using 
+sftp://your-username@your-server-ip 
 
-### Phase 3 : setting up snaptshots for backup with ZFS and automating them with Sanoid
+### Phase 3 : setting up Snaptshots with ZFS and automating them with Sanoid
 
-By convention : 
-Snapshot names consist of the name of the filesystem, followed by an @ and the name of the snapshot. For example, the snapshot snapname of the filesystem filesystem would be filesystem@snapname.
+#### A. Snapshots with ZFS
+A snapshot is quite litteraly a screen shot of a memory space (whole hdd, specific files..).
+it is used as backup in case you accidentally erase something, it's the equivalent of hitting "save" on video games. 
+
+Naming convention :``` snapshot_name@file_system_name```
+For example, the snapshot named "backup" of the filesystem "Downloads" would be named :
+backup@Downloads
 
 We can list snapshots using the zfs list command and specifying the type as snapshot:
-```
+```bash
 zfs list -t snapshot
 ```
 obviously will say "no datasets available" because we didn't take any snapshots yet.
-carefull, 
-``` zfs list ``` is only to list datasets, won't show the snapshots
 
-anyways let's manually take one : 
-```
+>Disclaimer,
+``` zfs list ``` is only to list datasets, not snapshots
+
+Just for training,
+let's manually take a snapshot : 
+```bash
 sudo zfs snapshot Circe_Spellbook@test
 ```
 then re list the snapshots : 
-
-![[Pasted image 20260220095645.png]]
+![[Snapshotlisting.png]]
 it worked ;)
 
-now write smth in there and lets ROLLBACK :
-```
+let's write something and save it,and lets ROLLBACK :
+```bash
 zfs rollback Circe_Spellbook@test
 ```
-worked :)
+what i wrote disappeared, i got back to the state of my snapshot, it worked :)
+#### B.  automation with Sanoid
+##### Why use sanoid when zfs has built in automation ?
+zfs built it automation tool gives you ZERO power on the frequence of your snapshots or how many to keep etc.. its just a pure plug and play, no configuration thus no personalistion.
+=> Sanoid works with zfs and allows you to control frequence and more
 
-now let's automate it, obviously you can use zfs built it automation tool except it will give you ZERO power on the frequence of your snapshots or how many to keep etc.. its just install and run, no configuration thus no personalistion.
-so let's install Sanoid, which works perfectly with zfs and will use zfs to take snaps and will manage them.
+#### a. instalation
+```bash
+su - # switching to root user
+sudo apt install sanoid 
 
 ```
-sudo apt install sanoid
-```
-first problem : when i called sanoid ```sanoid``` it said "command not found"
-
-the reason for this is because debian classes some commands such as sanoid as "admin only" which means normal users and idk why but even root do not have acess to it.
-To fix that, to fix it instead of switching to root using ```su``` user ``` su -```
-uh yeah it works and idk why
-to fix:
-```
-ln -s /usr/sbin/sanoid /usr/local/bin/sanoid
-```
-instead of using ```su -``` we can also this 
-
-second problem : 
-![[Pasted image 20260222161519.png]]
-
-that's normal, its because we haven't set a .conf file so let's do it inside our etc
-```
+#### b. configuration
+```bash
 mkdir /etc/sanoid
-```
-
-```
 vim /etc/sanoid/sanoid.conf
 ```
-fill it with : 
+Classic template  : 
 ```
-[Circe_Spellbook]
+[Circe_Spellbook] 
 	use_template = daily_only
 	recursive = yes
 
@@ -290,95 +259,37 @@ fill it with :
 	autosnap = yes
 	autoprune = yes
 ```
-and then we have to force it manually for the first time so it starts running :
-```
-sanoid --take-snapshots --verbose
-```
-let's check if that worked :
-```
-zfs list -t snapshot
-```
-also sanoid works on debian by using a counter, which you can see if it is active or not using :
+autoprune : to delete oldest snapshots when you reached the limit you've defined
+autosnap : to enable automatic snapshots
+[Circe_Spellbook] : this is how i called my RAID1 pool
+[template_daily_only] : name of the daily snapshot template
+
+Sanoid works on debian by using a counter, to check if your .conf file doesn't have typos and works flawlessly: 
 ```
 systemctl status sanoid.timer
 ```
-which gives : 
-![[Pasted image 20260222163607.png]]
+![[SanoidUP.png]]
+### Phase 5 : hosting Nextcloud inside a container
 
-### Phase 4 : Allowing users a part of the RAID 1 disk storage
+#### A. Docker container
 
-you may have noticed but our RAID 1 storage is in our home, but our users are not inside that space, those are on the RAID 0 storage. To save their files in a safer storage space (raid 1) we can either completly move our user in the RAID 0 storage, OR we could give them acess to a file that points to the RAID1 storage. which means the user could choose which informations are worth saving in the RAID1 space and which ones are pretty much useless (those will be left on the RAID 0) disk.
+"A container is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another"- Docker documentation
 
-to make that happen : 
-```
-# Create the dataset
-zfs create Circe_Spellbook/bow
+>Basically, a container is a box with all softwares set at a specific version, so whenever you send your mate a file inside a container there will NEVER be any software version conflicts. prized in the industry.
+#### a. Docker installation 
 
-# Give 'bow' full ownership of his new territory
-chown bow:bow /Circe_Spellbook/bow
-
-# Restrict it so only 'bow' (and root) can even see the folder
-chmod 700 /Circe_Spellbook/bow   (i didnt do this)
-```
-
-automating it with sanoid : 
-```
-[Circe_Spellbook/bow]
-    use_template = template_daily_only
-    recursive = no
-```
-
-now let's create a "portal" so bow can acess that RAID1 Circe_Spellbook/bow_spells from his user account :
-```# Create the symbolic link inside bow's home
-ln -s /Circe_Spellbook/bow_spells /home/bow/bow_spells
-```
-
-now if you tried to write something inside of that safe space for bow user as bow, you will notice you do not have the rights, let's change that.
-from what i understood zfs has some wierd stuff that means bow has to first be able to acess Circe_Spellbook, obviously he shouldn't be able to see any other files, only his own that are inside there : 
-
-```
-# Allow everyone to "enter" the pool directory (but not necessarily list files)
-chmod +x /Circe_Spellbook
-```
-
-then : 
-```
-ls -ld /Circe_Spellbook/bow_spells // to check if bow has permission
-```
-which retured smth like : drwxr-xr-x 2 root root 2 Mar 20 05:37 /Circe_Spellbook/bow_spells
-and "root root" means bow cant do shit, except see
-so lets change that : 
-```
-chown bow:bow /Circe_Spellbook/bow_spells
-```
-which now gives : drwxr-xr-x 2 bow bow 2 Mar 20 05:37 /Circe_Spellbook/bow_spells
-which  is now good :) bow can write and delete there.
-
-Now let's make sure bow doesn't have acess to any of the other files ( she already can't modify them but i dont want her to even be able to go there, i want her to be able to only stay in the space made for her so )
-
-### Phase 5 : automatizing system updates
-
-(remember im a beginner too pls) and from what i've understood there's 3 ways to do this.
-1) make the nas send you an email when an update is available and you do it manually or by clicking a button (you write that script too lol)
-2) installing the **unattended update package**  of debian ( big con : if at some point zfs will fuck up at adapting to the new updates of your OS (duh its a community mainted thing), and then you'll have to manually save your ass)
-3)  OR, big brain option, an **UNFUCKABLE** way to do it, uhh yeah so this sounds HARD core lolzzz ill see that tmr maybe...
-
-### Phase 6 : hosting Nextcloud on a docker 
-
-first step, creating a Containter (we will use the open source Docker product from the Docker company but other products like podman from Redhat exists in open source)
-just follow the tutorial on : https://docs.docker.com/engine/install/debian/
-the official page for ddebian docker installs.
-
-```
+To avoid trouble, let's remove any previous version you may have :
+```bash
+#more at https://docs.docker.com/engine/install/debian
 sudo apt upgrade
 sudo apt install curl -y
 
 sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
 ```
-this is done to fully remove all the old or conflicting versions of docker that could be on ur pc already.
+
 then let's setup Docker's apt repository : 
-(this is available oon the ubuntu wiki i believe)
-```
+```bash
+# found on Ubuntu docker documentation
 # Add Docker's official GPG key:
 sudo apt update
 sudo apt install ca-certificates curl
@@ -399,27 +310,33 @@ EOF
 sudo apt update
 ```
 then we install the latest version : 
-```
+```bash
  sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
-
-to verify that the Docker service is running  :
-```sudo systemctl status docker```
-which gives : 
-![[Pasted image 20260328131312.png]]
-and : 
-```sudo docker run hello-world```
-which should give : 
-![[Pasted image 20260328131531.png]]
-
-Now we create a file for familly meembers, here i will try to give "jems" some space and create a readable only folder "familly" that nextcloud once installed will be able to use : 
+checking if Docker is running : 
+```bash
+sudo systemctl status docker
 ```
+(should say active)
+same here : 
+```bash
+sudo docker run hello-world
+```
+which should give : 
+![[Docker_hello_world.png]]
+Docker is running just fine !
+
+#### B. Nextcloud
+
+Nextcloud is an open-source software that basically replaces google drive except it doesn't work great for pictures (which is why we will install immich later on) but it's perfect for saving files.
+#### a. Installation
+Im creating files for familly members, here i will try to give "jems" some space and create a readable only folder "familly" that nextcloud once installed will be able to use : 
+```bash
 sudo zfs create Circe_Spellbook/jems
 sudo zfs create Circe_Spellbook/famille
 ```
-( we already saw this earlier for zfs)
 then we give autorisation for the nextcloud user to be able to modify these files : 
-```
+```bash
 sudo chown -R 33:33 /Circe_Spellbook/jems
 sudo chown -R 33:33 /Circe_Spellbook/family
 ```
@@ -432,7 +349,7 @@ vim docker-compose.yml
 ```
 there are easier ways to run a container, but creating this yml should be the easiest and most advanced way 
 copy pasted this in here :
-```
+```yaml
 services:
   db:
     image: mariadb:10.6
