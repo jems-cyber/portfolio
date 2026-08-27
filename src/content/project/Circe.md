@@ -1,256 +1,117 @@
 ---
-title: "Meet Circe, my homemade Cloud"
+title: Meet Circe, my homemade server
 description: "A Debian system, with RAID 1 and Sanoid automatic snapshots, hosting softwares(Nextcloud, Immich) through Docker, along Caddy as reverse-proxy and Crowdsec to eliminate brute force attempts "
-image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=600"
-skills: ["Bash", "Docker", "Sanoid", "ZFS", "https and reverse proxy protocols"]
+image: https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=600
+skills:
+  - Bash
+  - Docker
+  - Sanoid
+  - ZFS
+  - https and reverse proxy protocols
 publishDate: 2023-11-01
 ---
 
-Problem  : Through the last few decades, several data breaches from big companies like google have been discoved, not only that but google is complicit of training their AI bots on the data you store on their cloud and they coud potentialy have acess to your sensible informations. 
+**Executive Summary:** 
+	Designed and deployed a secure, self-hosted cloud infrastructure to host **Nextcloud** and **Immich**. Engineered with data resilience (**ZFS RAID 1 + automated snapshots**), **Tailscale** based private administrative access to reduce ssh exposure, and active threat defense (**xCaddy + CrowdSec WAF/IPS**) to mitigate automated exploitation and brute-force attacks.
+	
+**Project Impact:**
+- **Reduced Attack Surface:** Eliminated public SSH exposure using Tailscale.
+- **Automated Threat Mitigation:** Blocked Layer 7 attacks (XSS/SQLi) and brute-force attempts via CrowdSec.
+#### Architecture design : 
+```mermaid
+graph TD
+    User((External User)) -->|HTTPS :443| DNS[DuckDNS / Dynamic DNS]
+    DNS --> Router[Edge Router / NAT]
+    Router --> xCaddy[xCaddy Reverse Proxy]
+    
+    Admin((SysAdmin)) -->|WireGuard| Tailscale[Tailscale ZTNA]
+    Tailscale --> SSH[SSH TCP:22]
+    
+    subgraph "Debian Server (Docker Host)"
+        xCaddy <-->|Log Ingestion API| CrowdSec[CrowdSec WAF/IPS]
+        xCaddy -->|Internal Docker Net| Nextcloud[Nextcloud]
+        xCaddy -->|Internal Docker Net| Immich[Immich]
+    end
+    
+    subgraph "ZFS Storage Pool (RAID 1)"
+        Nextcloud --> Data1[(Nextcloud DB & Data)]
+        Immich --> Data2[(Immich DB & Data)]
+    end
+```
 
-Solution  :  You can make your own google drive ;) here, follow me 
+### Service and port configuration 
+| **Service**   | **Internal Port** | **External Port** | **Exposure**          | **Network Segregation** |
+| ------------- | ----------------- | ----------------- | --------------------- | ----------------------- |
+| **SSH**       | 22                | None              | ZTNA (Tailscale) only | Host OS                 |
+| **xCaddy**    | 80/443            | 80/443            | Public Web            | `caddy_net_final`       |
+| **Nextcloud** | 80                | None              | Reverse Proxy only    | `caddy_net_final`       |
+| **Immich**    | 2283              | None              | Reverse Proxy only    | `caddy_net_final`       |
 # Summary 
 
-[Phase 1 debian install + mirror problem solving](#phase-1)
+[1. Eliminating Public SSH with Tailscale](#1)
+ [2. Configuration of a RAID 1 storage pool (ZFS)](#2)
+[3. Automating snapshots/backups (Sanoid)](#3)
+[4. Application Deployment](#4)
+[5. fixed local ip  and domain names](#5)
+[6. Reverse proxy setup and custom binary (Caddy/xCaddy)](#6)
+[7. Edge Security & WAF (Crowdsec)](#7)
+<a id="1"></a>
+____
+### 1. Eliminating Public SSH with Tailscale
 
-[Phase 2 SSH and tailscale setup]
+Instead of exposing an open SSH port, I used Tailscale to facilitate Zero Trust Network Access (ZTNA) and reduce my external attack surface.  I restrict this only to SSH since applying it to front end file retrieval would force client authentication on every personal device.
 
-[[#Phase 2 formating hard drives + RAID1 with ZFS]]
+every obvious or well documented installation process such as tailscale or docker will be skipped.
+<a id="2"></a>
+________
+### 2. Configuration of a RAID 1 storage pool (ZFS)
 
-[[#Phase 3  setting up snaptshots for backup with ZFS and automating them with Sanoid]]
+I chose ZFS because it replaces the traditional `fdisk`, `mdadm`, and `mkfs.ext4` stack with a unified storage manager that actively prevents bit rot.  I choose a RAID1 configuration for financial reasons.
 
-[[#Phase 4 : Allowing users a part of the RAID 1 disk storage]]
+after formatting the disks I noticed with ```lsblk```, a "sdb2" (partition that hasn't been erased) but  ZFS will take care of erasing the partition when creating the pool.  (it's automatic)
 
-[[#Phase 5 : automatizing system updates]]
+**problem encountered during installation :**
+    I configured my Debian .sources file to only get free packages. But apparantly ZFS needs the "contrib non-free" tag even if ZFS is free.
+**Solution :**
+	going  back to our package .sources and adding "contrib non-free"
 
-[[#Phase 6 : hosting Nextcloud on a docker ]]
-
-[[#IMMICH]]
-
-[[#Getting rid of tailscale]]
-
-<a id="phase-1"></a>
-### Phase 1 debian install + mirror problem solving
-
-This step is widely documented on the web, so i will skip the documentation and only describe how i solved the problems i've encountered.
-#### A mirror problem 
-
- problem : I couldn't acess debian mirrors all over the world... which means i couldn't acess the usual packages i have to install.
-
-solution : I still had ethernet, so all i needed to do is to acess the sources debian uses to install packages.
-let's acess those sources :
-``` bash
-nano /etc/apt/sources.list
-```
-then we add the sources manually (you can get those on the official Debian wiki) 
-just copy and paste this :
-
-attention, les NOTICES NE MARCHENT PAS SUR ASTRO 
->[!notice]
-> notice : using a .list is the "old" way, the newer is a .sources + different synthax (will be shown below) 
-
-```bash
-#old way (.list)
-deb http://deb.debian.org/debian/ bookworm main
-deb http://security.debian.org/debian-security bookworm-security main
-deb http://deb.debian.org/debian/ bookworm-updates main
-```
-
-the new way is just a format change, instead of a .list file, write a .sources and in it paste :
-```bash
-#new way (.sources)
-Types: deb deb-src
-URIs: https://deb.debian.org/debian
-Suites: trixie trixie-updates
-## If you want access to contrib and non-free components,
-## add " contrib non-free" after "non-free-firmware":
-Components: main non-free-firmware
-Enabled: yes
-Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
-
-Types: deb deb-src
-URIs: https://security.debian.org/debian-security
-Suites: trixie-security
-Components: main non-free-firmware
-Enabled: yes
-Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
-```
-(we later added the "contrib-non-free" tag because ZFS needs it, even if it's free)
-
-don't forget to update : 
-```bash
-apt update
-apt upgrade
-```
------------------
-### Phase 2 : SSH and tailscale setup 
-Since my server first used to sit in my school, i wanted to acess it from anywhere in the local network. So I set up the ssh protocol : 
-#### first step : Getting my server's ip adress
-```bash
-ip addr
-```
-which shows : 
-![A description of the Circe image](../../assets/images/Circe_pics/ipaddr.png)
-=> 127.26.77.1 is my ip adress !
-#### second step : setting up ssh
-```bash
-apt install openssh-server
-```
-ssh works :)
-#### third step : setting up tailscaile
-I needed to ssh into my server even if i wasn't connected to the local network, but opening an ssh port to the world is unsafe practice. Since i didn't have enough knowledge about open source alternatives i used tailscale.
-
-to install tailscale : 
-```bash
-apt update && apt install curl -y
-curl -fsSL https://tailscale.com/install.sh | sh
-```
-once installed, start it up :
-```bash
-sudo tailscale up
-```
-then the terminal will give you an url, click on it
-![[tailscaile.png]]
-In there, Tailscale will give your server a new "local" ip, that you can use to ssh from anywhere :)
-### Phase 2 formating hard drives + RAID1 with ZFS
-
-#### 1step step : formating the disks 
-I physically connected two HDD disks of 250gb each, but the server isn't picking them up
-so, what's up ?
-first, run : 
-```bash
-sudo fdisk -l
-# gives information about the disks onboard
-```
-this gave me :
-![[fdisk.png]]
-Here we see that debian is installed on my 500gb hdd,  so now let's format (= delete everything) on the two hdd disks i added. ( they are named /dev/sdb and /sdc) BE CAREFULL BECASE SDA IS THE DEBIAN DISK SO DON'T touch it.
-
-to format  : 
-```bash
-sudo wipefs -a /dev/sdb
-zsudo wipefs -a /dev/sdc
-```
-
-However, if we run ```lsblk```, 
-we notice that there is a "sdb2" which means sdb has a partition and it hasn't been erased : 
-![[lsblk.png]]
-ZFS will take care of erasing the partition when creating the pool. 
-(it's automatic)
-#### 2nd step : setting up RAID1 with ZFS + problem solving
--> what is RAID
-to mount the disks,  we need to first create a "pool" using the ZFS tool.  ( ZFS is the new tool that regroups fdisk, mdadm and mkfs.ext4 under the same umbrella)
-
-##### a. installing zfs + problem encountered 
-to install ZFS : 
-```bash
-sudo apt update
-sudo apt upgrade
-sudo apt install zfs-dkms zfsutils-linux
-```
-
-**problem encountered**
-     running this gave me a problem because i configured my debian .sources file to only get free packages. But aparantly ZFS needs the "contrib non-free" tag.  so let's go back to our package .sources : 
-     ![[sources_contrib.png]]
-     we just added "contrib non-free"
-    zfs should work now :) 
-
-##### b. creating a zfs pool (= mounting)
-Once zfs installed, let's create a storage "pool" for the two 250gb disks, zfs automatically mounts the disks when it creates a pool.
+to create a pool, you can use the hard drives names your OS gives you (sda, sdb etc..) but if you interchange the drives, it wouldn't work anymore in older disk mount tools,  so just in case let's do it with the specific disk ID.
   ```bash
+# this is/was the unsafe way 
 zpool create -f tank mirror /dev/sdb /dev/sdc
   ```
- Altough i've heard that if you used sda sdb sdc, and then unplugged your drives and changed the order (physically), it would change their names (sda becomes sdb etc..) to avoid this we used to run commands using their disk id (never changes), even if this problem should be solved by modern ZFS, i wanted to try the old way so :
-
-first let's find out which serial is each hdd : 
+the safe way : 
+find out each disk's SERIAL number and match it with their ID 
 ```bash
+#to get disk ID
 lsblk --nodeps -o name,serial
 ```
 ```--nodeps``` (no dependencies) : only show the parent drives, no partitions
 ```-o name,serial``` only outputs the name and serial column of lsblk
 
-![[lsblk_longer_command.png]]
-now you know each hdd serial number, now let's feed the zfs the full hdd ID :
-
+i listed all disks ID and mount them using their ID
 ```bash
-cd /dev/disk/by-id/
-ls
-```
-which gives :
-![[disk_ls.png]]
-> how to read this ?
-> [BUS]-[MANUFACTURER MODEL]-[SERIAL] is the format all hdd/nvme use in linux,
-> for exemple here : 
-> "ata" is the bus type, could be usb 
-> " ST500DM002-1BD142" is the manufacturer model, ST for Seagate
-> "Z3TYC1B3" is the hdd serial 
-
-Once you copied the ID matching to your serials :
-```bash
-#replace my disk id with yours
 zpool create <name of your pool> mirror /dev/disk/by-id/ata-ST3250318AS_5VY5KNNV /dev/disk/by-id/ata-WDC_WD2500AAKX-603CA0_WD-WMAYV3657019
 ```
+<a id="3"></a>
+___
+### 3. Automating snapshots/backups (Sanoid)
 
-#### c. testing it out by sftp
-Congrats, we just created a mirrored disk NAS, you can just open it in your file manager on your laptop (or any device that has tailscale running / or any devices on the same network) using 
-sftp://your-username@your-server-ip 
+I choose Sanoid (snapshot management tool for zfs) over the included auto snapshots from zfs because of better customization options. 
+**Security context :** this offers a tight Recovery Point Objective (RPO) to instantly roll back in the event of ransomware or accidental data deletion.
 
-### Phase 3 : setting up Snaptshots with ZFS and automating them with Sanoid
+**Naming convention :**
+	``` snapshot_name@file_system_name```
+	For example, the snapshot named "backup" of the filesystem "Downloads" would be named :
+	backup@Downloads
 
-#### A. Snapshots with ZFS
-A snapshot is quite litteraly a screen shot of a memory space (whole hdd, specific files..).
-it is used as backup in case you accidentally erase something, it's the equivalent of hitting "save" on video games. 
-
-Naming convention :``` snapshot_name@file_system_name```
-For example, the snapshot named "backup" of the filesystem "Downloads" would be named :
-backup@Downloads
-
-We can list snapshots using the zfs list command and specifying the type as snapshot:
-```bash
-zfs list -t snapshot
+Classic template  :  (lives at /etc/sanoid/sanoid.conf )
 ```
-obviously will say "no datasets available" because we didn't take any snapshots yet.
-
->Disclaimer,
-``` zfs list ``` is only to list datasets, not snapshots
-
-Just for training,
-let's manually take a snapshot : 
-```bash
-sudo zfs snapshot Circe_Spellbook@test
-```
-then re list the snapshots : 
-![[Snapshotlisting.png]]
-it worked ;)
-
-let's write something and save it,and lets ROLLBACK :
-```bash
-zfs rollback Circe_Spellbook@test
-```
-what i wrote disappeared, i got back to the state of my snapshot, it worked :)
-#### B.  automation with Sanoid
-##### Why use sanoid when zfs has built in automation ?
-zfs built it automation tool gives you ZERO power on the frequence of your snapshots or how many to keep etc.. its just a pure plug and play, no configuration thus no personalistion.
-=> Sanoid works with zfs and allows you to control frequence and more
-
-#### a. instalation
-```bash
-su - # switching to root user
-sudo apt install sanoid 
-
-```
-#### b. configuration
-```bash
-mkdir /etc/sanoid
-vim /etc/sanoid/sanoid.conf
-```
-Classic template  : 
-```
-[Circe_Spellbook] 
+[pool_name] 
 	use_template = daily_only
 	recursive = yes
 
-[template_daily_only]
+[name_of_template]
 	daily = 30
 	hourly = 0
 	frequently = 0
@@ -259,404 +120,233 @@ Classic template  :
 	autosnap = yes
 	autoprune = yes
 ```
-autoprune : to delete oldest snapshots when you reached the limit you've defined
-autosnap : to enable automatic snapshots
-[Circe_Spellbook] : this is how i called my RAID1 pool
-[template_daily_only] : name of the daily snapshot template
+`autoprune `: to delete the oldest snapshot when you reached the limit you've defined
+`autosnap` : to enable automatic snapshots
 
-Sanoid works on debian by using a counter, to check if your .conf file doesn't have typos and works flawlessly: 
-```
+check if it's working :
+```bash
 systemctl status sanoid.timer
 ```
-![[SanoidUP.png]]
-### Phase 5 : hosting Nextcloud inside a container
+<a id="4"></a>
+___
+### 4. Application Deployment (Docker, Immich, Nextcloud)
 
-#### A. Docker container
+#### a. DOCKER
+I chose Docker instead of hosting services on bare-metal because of better threat isolation in case a service ever get compromised by a threat actor. 
 
-"A container is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another"- Docker documentation
+**Future Improvement :** Migrate to Rootless Docker to mitigate container breakout vulnerabilities.
+____
+#### b. IMMICH
 
->Basically, a container is a box with all softwares set at a specific version, so whenever you send your mate a file inside a container there will NEVER be any software version conflicts. prized in the industry.
-#### a. Docker installation 
-
-To avoid trouble, let's remove any previous version you may have :
+Installation guide at https://docs.immich.app/overview/quick-start/
+to check if it's running :
 ```bash
-#more at https://docs.docker.com/engine/install/debian
-sudo apt upgrade
-sudo apt install curl -y
-
-sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
+curl -I http://localhost:2283
 ```
 
-then let's setup Docker's apt repository : 
+Later on we will be working with Caddy (open source reverse proxy), and edit our yml file : 
+_ by adding a network for caddy (few lines at the end of file)
+_ commenting out the port (so machines on local network can't bypass Caddy)
+As well as the .env : 
+_ by declaring caddy's container ip subnets as trusted proxies to reveal uploader's ip
+
+------------
+#### c. NEXTCLOUD
+
+While Nextcloud AIO is recommended for beginners, I opted for custom Docker Compose manifests to retain granular control
+
+needed docs at  https://github.com/nextcloud/docker/blob/master/.examples/docker-compose/insecure/mariadb/apache/compose.yaml
+
+ check if its is alive : 
 ```bash
-# found on Ubuntu docker documentation
-# Add Docker's official GPG key:
-sudo apt update
-sudo apt install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
-Types: deb
-URIs: https://download.docker.com/linux/debian
-Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
-Components: stable
-Architectures: $(dpkg --print-architecture)
-Signed-By: /etc/apt/keyrings/docker.asc
-EOF
-
-sudo apt update
+curl -I http://localhost:8080 # port in the yml
 ```
-then we install the latest version : 
+We will modify the docker-compose.yml later on, this is just to ensure it works.
+<a id="5"></a>
+____________
+## 5. Network Infrastructure & Dynamic DNS Routing
+
+To ensure consistent internal routing and reliable reverse proxy targeting, I configured a static DHCP reservation at the edge router level, binding the server's MAC address to a permanent local IP. This guarantees the server survives reboots and network drops without breaking Caddy's upstream proxy rules.
+
+For external resolution, I implemented DuckDNS as a lightweight Dynamic DNS (DDNS) provider. I provisioned dedicated subdomains for each application.
+<a id="6"></a>
+___
+## 6. Reverse proxy setup and custom binary (Caddy/xCaddy)
+
+Caddy is an open source reverse proxy, it links your domain name with the server's IP + port. there are other big names like NGINX but Caddy is easier because it renews SSL certificates on its own.
+
+**Problem :** caddy doesn't support Crowdsec
+**Solution :** we will use xCaddy, (a tool that allows you to use caddy with custom modules, here with the crowdsec module)
+
+We will first make a Dockerfile that will install xcaddy and its dependencies
+```Dockerfile
+#modified dockerfile from
+#https://github.com/serfriz/caddy-custom-builds/blob/main/caddy-duckdns-crowdsec/Dockerfile
+
+ARG CADDY_VERSION=2
+#change this to the latest version
+
+# removed "alpine" so it defaults to Debian
+# (easier to debug because tools are pre-installed)
+FROM caddy:${CADDY_VERSION}-builder AS builder
+
+RUN xcaddy build \
+    --with github.com/mholt/caddy-l4 \
+    --with github.com/caddyserver/transform-encoder \
+    --with github.com/hslatman/caddy-crowdsec-bouncer/http@main \
+    --with github.com/hslatman/caddy-crowdsec-bouncer/appsec@main \
+    --with github.com/hslatman/caddy-crowdsec-bouncer/layer4@main
+
+FROM caddy:${CADDY_VERSION}
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+```
+
+then create a "shared Docker network", basically services inside containers are meant to be isolated but i need them to exchange with caddy and later on with crowdsec, so we will create a "network" aka a link between the containers and caddy.
 ```bash
- sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+docker network create caddy_net_final
+# you can name it as you wish
 ```
-checking if Docker is running : 
-```bash
-sudo systemctl status docker
-```
-(should say active)
-same here : 
-```bash
-sudo docker run hello-world
-```
-which should give : 
-![[Docker_hello_world.png]]
-Docker is running just fine !
-
-#### B. Nextcloud
-
-Nextcloud is an open-source software that basically replaces google drive except it doesn't work great for pictures (which is why we will install immich later on) but it's perfect for saving files.
-#### a. Installation
-Im creating files for familly members, here i will try to give "jems" some space and create a readable only folder "familly" that nextcloud once installed will be able to use : 
-```bash
-sudo zfs create Circe_Spellbook/jems
-sudo zfs create Circe_Spellbook/famille
-```
-then we give autorisation for the nextcloud user to be able to modify these files : 
-```bash
-sudo chown -R 33:33 /Circe_Spellbook/jems
-sudo chown -R 33:33 /Circe_Spellbook/family
-```
-to verify : ![[Pasted image 20260328135059.png]]
-now lets install nextcloud :
-
-```
-mkdir ~/circe-cloud && cd ~/circe-cloud
-vim docker-compose.yml
-```
-there are easier ways to run a container, but creating this yml should be the easiest and most advanced way 
-copy pasted this in here :
-```yaml
-services:
-  db:
-    image: mariadb:10.6
-    restart: always
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
-    volumes:
-      - nextcloud_db:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=super_secret_root_pass
-      - MYSQL_PASSWORD=nextcloud_db_pass
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
-
-  app:
-    image: nextcloud:latest
-    restart: always
-    ports:
-      - 8080:80
-    depends_on:
-      - db
-    volumes:
-      - nextcloud_data:/var/www/html
-      # THE "PORTALS" TO YOUR ZFS POOL
-      - /Circe_Spellbook/jems:/var/www/html/data/jems_private
-      - /Circe_Spellbook/famille:/var/www/html/data/famille:ro
-    environment:
-      - MYSQL_PASSWORD=nextcloud_db_pass
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
-      - MYSQL_HOST=db
-
-volumes:
-  nextcloud_db:
-  nextcloud_data:
-```
-
-then : 
-```
-docker compose up -d
-```
-inside that folder, this runs the cloud and the -d tells it to run in the background so it can run even if i close the terminal 
-![[Pasted image 20260328141417.png]]
-
-check if all fine with : ``` docker compose ps```
-![[Pasted image 20260328141522.png]]
-and now we just have to type in a browser Circeès ip adress followed by ":8080" which is the port number we gave specifically to Nextcloud.
-and bim : ![[Pasted image 20260328142954.png]]
-now lets login using the password that is in our .yml file
-
-i got this errror : 
-![[Pasted image 20260328145532.png]]
-thats allegedly a permission error thing ?
-so lets : 
-```
-# Set ownership for the main data portal
-sudo chown -R 33:33 /var/lib/docker/volumes/circe-cloud_nextcloud_data/_data
-
-# Also, double check your ZFS datasets just in case
-sudo chown -R 33:33 /Circe_Spellbook/jems
-sudo chown -R 33:33 /Circe_Spellbook/famille
-```
-refresh the page now and you should be able to log in, once in you need to link your zfs datasets by doing so  first : 
-
-Click your user icon (top right) -> Apps.
-In the search bar (top right), type External storage support.
-Click Download and enable.
-fill it in an use 
-
-
-# IMMICH
-# Run these as root/sudo
-zfs create Circe_Spellbook/immich
-chown -R 1000:1000 /Circe_Spellbook/immich
-
-jems...please dude let's re do this correctly okay ? step by step :)
-
-blablabla on refera ça plus tard correctement. Restons d'abord sur nextcloud oki?
-
-
-# Getting rid of tailscale
-
-## First step : fixed local ip 
-
-everytime you unplug and plug your nas to the ethernet, it will have a new ip. and if you don't know its ip you can't ssh / remote control it. So let's set a static ip, for this we need to talk to your home router. 
-
-```bash
-ip route show
-```
-it's the adress before the "via"
-![[Pasted image 20260411234700.png]]
-the adress after "src" is Circe's ip rn, the other idk
-
-
-now type in a browser http://ip_adress_of_the_router
-
-![[Pasted image 20260411234420.png]]
-log in and bim it looks like this for me
-
-now get into "parameters" then "DHCP" then "advanced mode" then "beaux statiques" then add fixed ip, (thus also add Circe's mac adress)
-to get MAC adress : 
-```bash
-ip addr
-```
-![[Pasted image 20260411235424.png]]
-uhhhh so link/ether under the eno1 category is Circe's mac adress.... yeah idk why or how dude cmon i cant do it all gimme a break urgh
-
-Circe local ip : 192.168.1.33
-MAC : 34:17:EB:A7:8D:02
-
-## 2nd step : fixed router ip 
-
-The internet provider changes your router's ip adress every x days. so in order to have a domain name that points to your router, your router has to tell the server that handles your domainn name that it changed ip, for this we get the domain name from duck dns and run a ducker with duck dns on it, basically it always checks if it's ip (so the router ip too since its own ip is fixed) and if it did change, it sends duck dns servers a message telling them to now point the domain name to the new  ip of the router :)
-
-So go to duck DNS and bim we got a domain name
-![[Pasted image 20260412011330.png]]
-
-then open another dir for DuckDNS to run in a container : 
-with the following yml file : 
-(found on https://docs.linuxserver.io/images/docker-duckdns/)
-here's mine : 
-```yaml
-services:
-  duckdns:
-    image: lscr.io/linuxserver/duckdns:latest #found on hub.docker.wiki
-    container_name: duckdns
-    network_mode: host # This lets the container see Circe public ip, if not it will actually have its own ip inside circe and won"t even be aware of an external world
-
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-      - SUBDOMAINS=circe-nas # Just the name, not the whole URL
-      - TOKEN=816798d3-285e-4f6f-9159-7530eb19c76d
-      - LOG_FILE=false #optional, basically stop ddns from writing long ass useless log files (allegedly) bcuz its not used either way (those logs)
-
-    restart: unless-stopped
-
-    #i skipped a few optional stuff, just visit https://docs.linuxserver.io/images/docker-duckdns/#read-only-operation if you need the whole stuff ;)
-```
-then let's run it ```docker compose up -d```
-
-
-
-
-uhhhhhh
-06767# docker network create caddy_net
-6bb5b76431f6b4aaeb000035b77755add765c28275d051a73dc83dcd8857c453
-
-docker compose up -d for both 
-
-une fois que l'on à ademande une adress ipv4 full stack a free on redemmarre la box ds 30 min puis on redirige les ports dont on a besoin vers notre server :
-
-![[Pasted image 20260412151923.png]]
-ip destination should be Circe's ip
-Ip source is "toutes"
-port de début : 80
-same 
-same 
-commentaire : http
-
-now again with port 443 and https as comment
-
-then 
-docker restart caddy
-and it should work :)
-![[Pasted image 20260412154514.png]]
-
-
-
-![[Pasted image 20260412154355.png]]
-![[Pasted image 20260412154407.png]]
-![[Pasted image 20260412154556.png]]
-![[Pasted image 20260412154705.png]]uhhh because of smth about the database password we changed lmao we litteraly just turned off and on a docker ptdrr
-
-![[Pasted image 20260412160725.png]]
-
-its because i had a read only file, i just deleted the read only part and now it comes back to an old errror
-# 1. Give the web-user group ownership of your storage
-chown -R root:33 /Circe_Spellbook/
-
-# 2. The "Magic" bit: Ensure all future files inherit these permissions
-chmod -R 2775 /Circe_Spellbook/
-
-
-
-
-
-
-
-
-fresh start
-
-_ stop running dockers
-_ i created a docker dataset in which i have for each container their yaml file and their databases
-_ since nextcloud, immich are not root users (they should never be lol, big sec probs) they have to have acess to the place where you will place their databases and pictures still. so let's give em permission  :
-_  yml file 
-_ autorisation with this : 
-```bash
-# for nextcloud to be able to create/delete files 
-chown -R root:33 /Circe_Spellbook/nextcloud_files 
-# the id number for www-data aka th "user" nextcloud is universally 33
-
-# this means root and group 33 (nextcloud) have full acess, other can't look nor write, and the "2" means that even if a brand new file has been dropped there by root, nextcloud can still acess it
-chmod -R 2770 /Circe_Spellbook/nextcloud_files
-```
-
-we can check if those changes have been made by doing so : 
-```bash
-ls -ld /Circe_Spellbook/nextcloud_files
-``` 
-except idk what that means lol... sorry hehe
-
-POUR IMMICH
-meme pas besoin de yaml file 
-
-```bash
-# Download the Docker Compose file
-wget -O docker-compose.yml https://github.com/immich-app/immich/releases/latest/download/docker-compose.yml
-
-# Download the default .env variable file
-wget -O .env https://github.com/immich-app/immich/releases/latest/download/example.env
-```
-then modify the .env file to modify wher you will drop your pictures
-![[Pasted image 20260412211256.png]]
-now we just have to setup caddy coreclty so it redirects to immich anytime i type in the right url
-
-i changed domain name so lets do this : 
-
-
-06767# docker exec --user www-data -it circe-nextcloud-app-1 php occ config:system:set trusted_domains 1 --value="circe-cloud.duckdns.org"
-System config value trusted_domains => 1 set to string circe-cloud.duckdns.org
-06767# docker exec --user www-data -it [YOUR_CONTAINER_NAME] php occ config:system:set overwrite.cli.url --value="https://circe-cloud.duckdns.org"
-docker exec --user www-data -it [YOUR_CONTAINER_NAME] php occ config:system:set overwriteprotocol --value="https"
-zsh: no matches found: [YOUR_CONTAINER_NAME]
-zsh: no matches found: [YOUR_CONTAINER_NAME]
-06767# docker exec --user www-data -it circe-nextcloud-app-1 php occ config:system:set overwrite.cli.url --value="https://circe-cloud.duckdns.org"
-docker exec --user www-data -it circe-nextcloud-app-1 php occ config:system:set overwriteprotocol --value="https"
-System config value overwrite.cli.url set to string https://circe-cloud.duckdns.org
-System config value overwriteprotocol set to string https
-06767#
-
-
-
- haha idk 
-
-
- immich needs authorisation for files too : 
-
- chown -R root:root /Circe_Spellbook/IMMICH_cloud_pics
-chmod -R 755 /Circe_Spellbook/IMMICH_cloud_pics
-
-and you need to create a network between caddy and immich lol 
-```
-docker network create caddy_net
-```
-then adding this to the end of caddy yaml file  : 
+reconfigure the .yml files of our services to specify the network
 ```yml
+#at the end of the docker-compose of each service, add : 
 networks:
-      - caddy_net
+ caddy_net_final:
+  external: true
 ```
+and spin up the containers.
 
-and this to the end of immich yaml file : 
-```yaml
-networks:
-  caddy_net:
-    external: true
-```
+Create a .docker-compose.yml file for both caddy and crowdsec in the same path where the Dockerfile is. I used : 
 
-it all works :)
+docker-compose.yml 
+	https://github.com/crowdsecurity/example-docker-compose/blob/main/caddy/docker-compose.yml
+ .env
+	  just store the CROWDSEC_API_KEY variable.
+Caddyfile 
+	https://github.com/crowdsecurity/example-docker-compose/blob/main/caddy/Caddyfile 
 
-# Crowdsec to ban brute force attempts and unfamous ips
+architecture tree : 
+	_ Caddyfile
+	|_ Dockerfile 
+	|_ .env
+	|_ docker-compose.yml
+all in the same directory.
 
-first, Crowdsec needs to read caddy logs so they need to share a file : 
+spin up the containers : 
 ```bash
-mkdir -p caddy_logs
-touch caddy_logs/access.log
-chmod 666 caddy_logs/access.log
-```
-
-then we also created a crowdsec-config and crowdsec-data into a crowdsec directory inside docker and a aquis.yaml
-
-aquis.yml :
-```yaml
-# ths to tell crowdsec to go see the logs(the path is like this because its the DOCKER path not my real os one)
-filenames:
-  - /var/log/caddy/access.log
-# this is to tell crowdsec that it will be formated by caddy (idk why we precise this)
-labels:
-  type: caddy
-```
-
-then STAY in the caddy repo, and launch crowdsec
-```bash
-docker compose up -d crowdsec
-
-#and only then get your api key 
-docker exec crowdsec cscli bouncers add caddy-bouncer
-```
-
-which gives this : 
-```bash
-EjAEca/kQIS05nalpjgh/vSSOUmJTgUqZhuafCRbf8I
-
-#JEMS THIS IS A SECRET U IDIOT
-``` 
-
-then you just : 
-```
 docker compose up -d --build
 ```
+i used --build because it didn't compile new changes if not.
+
+**1st Problem :** Cross-stage build failures during xCaddy compilation. 
+**Solution:** Identified a naming mismatch between the custom CrowdSec and Hslatman repositories; resolved by standardizing the build stage alias in the Dockerfile
+```Dockerfile
+FROM caddy:${CADDY_VERSION} AS caddy
+```
+
+**2nd problem :** The CrowdSec container entered a continuous restart loop. Log analysis (`docker logs crowdsec`) revealed a fatal initialization error: Docker had incorrectly mounted the `acquis.yaml` configuration path as a directory instead of a file.
+
+**Solution :** I replaced the faulty directory with a validated configuration file from the CrowdSec bouncer repository. To ensure a clean state, I tore down the corrupted container (`docker compose rm -s -f`) and performed a fresh build (`docker compose up -d --build`)``
+
+**Log Analysis :** Utilized `jq` for parsing Caddy's JSON-formatted Docker logs to monitor WAF block events in real-time :
+```bash
+docker logs <name-of-container> 2>&1 | jq -R 'fromjson? // empty'
+```
+
+check if caddy is working fine : 
+```bash
+curl -I http://localhost
+#notice it will not work with https as defined in the Caddyfile from crowdsec
+# (its just a test)
+# it will return HTTP/1.1 200 OK if it works
+```
+check if crowdsec is fine : 
+```bash
+# block all ip (duration has to be >1min (caddy loads ban list every min))
+ docker compose exec crowdsec cscli decisions add --range 0.0.0.0/0 --duration 15m 
+
+# instead of waiting 60s until it reloads the list let's force it 
+docker compose restart caddy
+
+# now try to curl it (using ipv4)
+curl -4 -I http://localhost
+
+#now rollback
+docker compose exec crowdsec cscli decisions delete --range 0.0.0.0/0
+```
+
+I configured my Caddyfile using (https://github.com/hslatman/caddy-crowdsec-bouncer/blob/main/examples/docker/caddy-conf/Caddyfile):
+I uncomment all WAF related configuration to activate it and associated my services with their domain names
+```bash
+#proxies
+<my_Nextcloud_domain_name> {
+    import crowdsec_secured
+
+    # Nextcloud requires these two redirects for Calendar and Contacts syncing to work
+    redir /.well-known/carddav /remote.php/dav 301
+    redir /.well-known/caldav /remote.php/dav 301
+
+    reverse_proxy nextcloud:80
+}
+
+<my_Immich_domain_name> {
+    import crowdsec_secured
+    reverse_proxy immich-server:2283
+}
+```
+also uncomment all WAF related lines in the acquis.yaml, (you can check my final version on GitHub) and install followings for WAF to work  :
+```bash
+sudo docker compose exec crowdsec cscli collections install crowdsecurity/appsec-crs
+sudo docker compose exec crowdsec  cscli collections install crowdsecurity/appsec-virtual-patching crowdsecurity/appsec-generic-rules
+```
+<a id="7"></a>
+____
+## 7. Edge Security & WAF (Crowdsec)
+
+Crowdsec is both an Intrusion Prevention System  and an Ative Threat Response against brute force attempts. It also functions as a Web Application Firewall (WAF), providing protection against SQL Injection, Cross-Site Scripting, ssh brute forcing, etc...
+
+first add the Nextcloud collections to Crowdsec : 
+change the crowdsec docker-compose file by adding this 
+```yaml
+    environment:
+      - GID=1000
+      - BOUNCER_KEY_CADDY=${CROWDSEC_API_KEY} 
+      - |   # this is a list and comments will not work inside so erase mine
+        COLLECTIONS=   
+        crowdsecurity/caddy
+        crowdsecurity/http-cve
+        crowdsecurity/whitelist-good-actors
+        crowdsecurity/nextcloud
+        crowdsecurity/appsec-virtual-patching  #all following necessary for WAF
+        crowdsecurity/appsec-generic-rules
+        crowdsecurity/appsec-crs
+```
+then allow Crowdsec to read Nextcloud's logs  : 
+```yaml
+#in the same docker-compose
+volumes:
+      - crowdsec-db:/var/lib/crowdsec/data/
+      - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml
+      - caddy-logs:/var/log/caddy:ro
+      - nextcloud:/var/www/html:ro  # added this 
+```
+**security note :** 
+	To mitigate the risk of lateral movement and maintain audit trails, the Nextcloud and Caddy log volumes are mounted as read-only to CrowdSec. This configuration prevents unauthorized log modification or deletion should a threat actor gain access to the CrowdSec environment.
+
+then indicate to crowdsec where it can read those logs by modifying the acquis.yaml file :
+```yaml
+#just add the following 
+--- 
+filenames:
+ - /var/www/html/data/nextcloud.log
+    labels:
+     type: nextcloud
+```
+
+**Problem:** CrowdSec initialization failed due to an undefined Nextcloud volume reference (`invalid compose project`). 
+**Solution:** Identified a Docker Compose internal naming discrepancy. Corrected the external volume mapping in the CrowdSec configuration to target `circe-nextcloud_nextcloud`.
+
+This integration relies on crowdsourced Cyber Threat Intelligence (CTI) feeds, automatically blocking IPs flagged for anomalous behavior, brute-force attempts, or known CVE exploitation across the global CrowdSec network. thanks to the Crowdsec community.
+
+
+

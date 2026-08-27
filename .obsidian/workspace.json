@@ -74,11 +74,13 @@
               "title": "Bookmarks"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200,
+    "collapsed": true
   },
   "right": {
     "id": "f66f6841917ccee2",
@@ -185,8 +187,10 @@
   },
   "active": "0ecb50217503bc41",
   "lastOpenFiles": [
-    "src/assets/images/Circe_pics/Docker_hello_world.png",
+    "brouillon.md",
     "src/content/project/Circe.md",
+    "Pasted image 20260822174705.png",
+    "src/assets/images/Circe_pics/Docker_hello_world.png",
     "src/assets/images/Circe_pics/Pasted image 20260328131312.png",
     "src/assets/images/Circe_pics/SanoidUP.png",
     "src/assets/images/Circe_pics/Snapshotlisting.png",
@@ -195,8 +199,6 @@
     "src/assets/images/Circe_pics/sources_contrib.png",
     "src/assets/images/Circe_pics/disk_ls.png",
     "src/assets/images/Circe_pics/lsblk.png",
-    "src/assets/images/Circe_pics/fdisk.png",
-    "src/assets/images/Circe_pics/tailscaile.png",
     "src/content/project/Circe.md~",
     "src/assets/styles/tailwind.css~"
   ]
