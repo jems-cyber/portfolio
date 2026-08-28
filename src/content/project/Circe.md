@@ -1,7 +1,7 @@
 ---
 title: Meet Circe, my homemade server
 description: "A Debian system, with RAID 1 and Sanoid automatic snapshots, hosting softwares(Nextcloud, Immich) through Docker, along Caddy as reverse-proxy and Crowdsec to eliminate brute force attempts "
-image: https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=600
+image: ~/assets/images/debian_blurred.png
 skills:
   - Bash
   - Docker
@@ -10,35 +10,15 @@ skills:
   - https and reverse proxy protocols
 publishDate: 2023-11-01
 ---
-
+		
 **Executive Summary:** 
 	Designed and deployed a secure, self-hosted cloud infrastructure to host **Nextcloud** and **Immich**. Engineered with data resilience (**ZFS RAID 1 + automated snapshots**), **Tailscale** based private administrative access to reduce ssh exposure, and active threat defense (**xCaddy + CrowdSec WAF/IPS**) to mitigate automated exploitation and brute-force attacks.
 	
 **Project Impact:**
 - **Reduced Attack Surface:** Eliminated public SSH exposure using Tailscale.
 - **Automated Threat Mitigation:** Blocked Layer 7 attacks (XSS/SQLi) and brute-force attempts via CrowdSec.
-#### Architecture design : 
-```mermaid
-graph TD
-    User((External User)) -->|HTTPS :443| DNS[DuckDNS / Dynamic DNS]
-    DNS --> Router[Edge Router / NAT]
-    Router --> xCaddy[xCaddy Reverse Proxy]
-    
-    Admin((SysAdmin)) -->|WireGuard| Tailscale[Tailscale ZTNA]
-    Tailscale --> SSH[SSH TCP:22]
-    
-    subgraph "Debian Server (Docker Host)"
-        xCaddy <-->|Log Ingestion API| CrowdSec[CrowdSec WAF/IPS]
-        xCaddy -->|Internal Docker Net| Nextcloud[Nextcloud]
-        xCaddy -->|Internal Docker Net| Immich[Immich]
-    end
-    
-    subgraph "ZFS Storage Pool (RAID 1)"
-        Nextcloud --> Data1[(Nextcloud DB & Data)]
-        Immich --> Data2[(Immich DB & Data)]
-    end
-```
-
+#### Architecture design :
+![Circe Server Architecture](~/assets/images/circe_diagram.png)
 ### Service and port configuration 
 | **Service**   | **Internal Port** | **External Port** | **Exposure**          | **Network Segregation** |
 | ------------- | ----------------- | ----------------- | --------------------- | ----------------------- |
@@ -46,15 +26,15 @@ graph TD
 | **xCaddy**    | 80/443            | 80/443            | Public Web            | `caddy_net_final`       |
 | **Nextcloud** | 80                | None              | Reverse Proxy only    | `caddy_net_final`       |
 | **Immich**    | 2283              | None              | Reverse Proxy only    | `caddy_net_final`       |
+|               |                   |                   |                       |                         |
 # Summary 
-
-[1. Eliminating Public SSH with Tailscale](#1)
- [2. Configuration of a RAID 1 storage pool (ZFS)](#2)
-[3. Automating snapshots/backups (Sanoid)](#3)
-[4. Application Deployment](#4)
-[5. fixed local ip  and domain names](#5)
-[6. Reverse proxy setup and custom binary (Caddy/xCaddy)](#6)
-[7. Edge Security & WAF (Crowdsec)](#7)
+- [1. Eliminating Public SSH with Tailscale](#1)
+- [2. Configuration of a RAID 1 storage pool (ZFS)](#2)
+- [3. Automating snapshots/backups (Sanoid)](#3)
+- [4. Application Deployment](#4)
+- [5. fixed local ip and domain names](#5)
+- [6. Reverse proxy setup and custom binary (Caddy/xCaddy)](#6)
+- [7. Edge Security & WAF (Crowdsec)](#7)
 <a id="1"></a>
 ____
 ### 1. Eliminating Public SSH with Tailscale

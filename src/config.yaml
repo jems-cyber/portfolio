@@ -121,4 +121,4 @@ analytics:
 ui:
   # Controls the Dark/Light mode toggle. 'system' means it reads the user's OS preference.
   # You could force 'dark:only' if you want a strict "hacker/cyber" aesthetic!
-  theme: 'system'
+  theme: 'dark'

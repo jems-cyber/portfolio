@@ -147,3 +147,36 @@
   margin-top: 1.5em !important;
   margin-bottom: 0.5em !important;
 }
+
+/* Fix Mermaid diagram text and shape clipping in AstroWind */
+.mermaid {
+  /* Add padding to the parent container so shapes can safely overflow the strict SVG viewBox */
+  padding: 3rem 1rem !important;
+  overflow: visible !important;
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.mermaid svg {
+  overflow: visible !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Fix text vertical alignment inside Mermaid nodes */
+.mermaid foreignObject {
+  overflow: visible !important;
+}
+
+.mermaid foreignObject div {
+  line-height: normal !important;
+  padding: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mermaid text {
+  line-height: normal !important;
+}
