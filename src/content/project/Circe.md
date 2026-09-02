@@ -283,7 +283,7 @@ sudo docker compose exec crowdsec  cscli collections install crowdsecurity/appse
 ____
 ## 7. Edge Security & WAF (Crowdsec)
 
-Crowdsec is both an Intrusion Prevention System  and an Ative Threat Response against brute force attempts. It also functions as a Web Application Firewall (WAF), providing protection against SQL Injection, Cross-Site Scripting, ssh brute forcing, etc...
+Crowdsec is both an Intrusion Prevention System  and an Active Threat Response against brute force attempts. It also functions as a Web Application Firewall (WAF), providing protection against SQL Injection, Cross-Site Scripting, ssh brute forcing, etc...
 
 first add the Nextcloud collections to Crowdsec : 
 change the crowdsec docker-compose file by adding this 
