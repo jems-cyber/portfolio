@@ -13,6 +13,7 @@ publishDate: 2023-11-01
 		
 **Executive Summary:** 
 	Designed and deployed a secure, self-hosted cloud infrastructure to host **Nextcloud** and **Immich**. Engineered with data resilience (**ZFS RAID 1 + automated snapshots**), **Tailscale** based private administrative access to reduce ssh exposure, and active threat defense (**xCaddy + CrowdSec WAF/IPS**) to mitigate automated exploitation and brute-force attacks.
+All related files on my github : https://github.com/jems-cyber/server
 	
 **Project Impact:**
 - **Reduced Attack Surface:** Eliminated public SSH exposure using Tailscale.
