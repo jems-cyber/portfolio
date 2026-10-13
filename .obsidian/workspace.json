@@ -48,6 +48,16 @@
               "icon": "lucide-file",
               "title": "Circe"
             }
+          },
+          {
+            "id": "19720c17d3da5703",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
           }
         ],
         "currentTab": 2
@@ -215,9 +225,9 @@
   },
   "active": "54f8a9897f5568c3",
   "lastOpenFiles": [
+    "src/content/project/Circe.md",
     "ramesh_jeremy_IOT_rapport_etonnement.pdf.md",
     "Untitled.md",
-    "src/content/project/Circe.md",
     "src/config.yaml~",
     "src/assets/images/debian_blurred.png",
     "src/content/project/Circe.md~",

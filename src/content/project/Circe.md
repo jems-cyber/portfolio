@@ -36,6 +36,8 @@ All related files on my github : https://github.com/jems-cyber/server
 - [5. fixed local ip and domain names](#5)
 - [6. Reverse proxy setup and custom binary (Caddy/xCaddy)](#6)
 - [7. Edge Security & WAF (Crowdsec)](#7)
+- [8. Attack Scenarios Results (Brute force, SQL injection)](#8)
+- [9. If I had the funding/time](#9)
 <a id="1"></a>
 ____
 ### 1. Eliminating Public SSH with Tailscale
@@ -328,6 +330,137 @@ filenames:
 **Solution:** Identified a Docker Compose internal naming discrepancy. Corrected the external volume mapping in the CrowdSec configuration to target `circe-nextcloud_nextcloud`.
 
 This integration relies on crowdsourced Cyber Threat Intelligence (CTI) feeds, automatically blocking IPs flagged for anomalous behavior, brute-force attempts, or known CVE exploitation across the global CrowdSec network. thanks to the Crowdsec community.
+<a id="8"></a>
+----
 
+## 8. Attack Scenarios Results (Brute force, SQL injection)
 
+We will test out different scenarios to check if our server is correctly secured against those attacks.
+### A. Brute force attack
 
+A short really basic brute force bash code : 
+```bash
+#!/usr/bin/env bash
+URL="http://localhost"  #change to adapt
+USER="user@gmail.com"
+PASSWORDS=("pleeeaaasseee" "password" "immich" "admin" "12345678" "letmein" "test1234")
+
+for pw in "${PASSWORDS[@]}"; do
+  echo "Trying password: $pw"
+  curl -s -o /dev/null -w "HTTP %{http_code}\n" \
+    -X POST "$URL/api/auth/login" \
+    -H "Content-Type: application/json" \
+    --data "{\"email\":\"$USER\",\"password\":\"$pw\"}"
+done
+```
+
+Once my laptop's IP is blocked, we can read the details of the attack using :  
+```bash
+docker exec crowdsec cscli alerts list
+```
+which returns : 
+
+| ID | Source IP | Reason / Trigger | Country | ASN / Organization | Decision | Timestamp (UTC) | Kind |
+|---|---|---|:---:|---|:---:|---|:---:|
+| 1603 | `195.83.2.34` | LePresidente/http-generic-401-bf | FR | 2200 Renater | `ban:1` | 2026-10-12 18:35:45 | `crowdsec` |
+| 1598 | `193.32.162.164` | anomaly score out-of-band: lfi: 5, anomaly: 15 | RO | 47890 Unmanaged Ltd | — | 2026-10-12 09:44:51 | `waf` |
+| 1597 | `193.32.162.164` | crowdsecurity/vpatch-git-config | RO | 47890 Unmanaged Ltd | — | 2026-10-12 09:44:51 | `waf` |
+| 1588 | `144.172.98.192` | anomaly score out-of-band: lfi: 5, anomaly: 5 | US | 14956 ROUTERHOSTING | — | 2026-10-11 18:25:04 | `waf` |
+| 1587 | `144.172.98.192` | crowdsecurity/vpatch-git-config | US | 14956 ROUTERHOSTING | — | 2026-10-11 18:25:04 | `waf` |
+
+the first ip is the latest (mine)
+to get even more details we can inspect the specific **alert ID** generated from the previous command :
+```bash
+docker compose exec crowdsec cscli alerts inspect <ALERT_ID> 
+```
+which gives : 
+```bash
+################################################################################
+
+ - ID           : 1603
+ - Date         : 2026-10-12T18:35:47Z
+ - Machine      : localhost
+ - Simulation   : false
+ - Remediation  : true
+ - Kind         : crowdsec
+ - Reason       : LePresidente/http-generic-401-bf
+ - Events Count : 6
+ - Scope:Value  : Ip:195.83.2.34
+ - Country      : FR
+ - AS           : Renater
+ - Begin        : 2026-10-12T18:35:45Z
+ - End          : 2026-10-12T18:35:47Z
+ - UUID         : 2fa70af7-3ee5-4a41-9d98-ea8eb7090610
+
++-----------------------------------------------------------------------+
+| Active Decisions                                                      |
++---------+----------------+--------+------------+----------------------+
+|    ID   |   scope:value  | action | expiration |      created_at      |
++---------+----------------+--------+------------+----------------------+
+| 2080677 | Ip:195.83.2.34 | ban    | 3h58m9s    | 2026-10-12T18:35:47Z |
++---------+----------------+--------+------------+----------------------+
+
+ - Context  :
++------------+-----------------+
+|     Key    |      Value      |
++------------+-----------------+
+| method     | POST            |
+| status     | 401             |
+| target_uri | /api/auth/login |
+| user_agent | curl/8.5.0      |
++------------+-----------------+
+```
+
+Here, we clearly see that my laptop was banned, scenario worked flawlessly ;)
+	
+let's not forget to unban ourselves : 
+```bash
+docker exec crowdsec cscli decisions delete --ip <my_ip>
+```
+### B. WAF Simulation (SQL injection)
+
+let's try to execute a SQL injection attack from my laptop :
+```bash
+curl -I "https://<your_nextcloud_domain_name>/?id=1'%20OR%20'1'='1"
+
+# which returns : 
+HTTP/2 200
+alt-svc: h3=":443"; ma=2592000
+cache-control: no-store
+content-type: text/html; charset=utf-8
+date: Mon, 12 Oct 2026 19:38:45 GMT
+etag: "1af9-INIf8E+dRYlF4FEQYTZe6ehBkUM"
+via: 1.1 Caddy
+x-powered-by: Express
+content-length: 6905
+```
+
+To check if it was correctly blocked : 
+```bash
+# on the server
+docker exec crowdsec cscli alerts list
+```
+which returns : 
+### Recent Security Alerts
+
+| ID       | Value (IP)      | Trigger / Reason                                          | Country | ASN / Organization    | Decision  | Timestamp (UTC)       | Kind       |
+| :------- | :-------------- | :-------------------------------------------------------- | :------ | :-------------------- | :-------- | :-------------------- | :--------- |
+| **1616** | `78.240.214.32` | anomaly score out-of-band: sql_injection: 10, anomaly: 10 | FR      | 51207 Free Mobile SAS |           | `2026-10-13 16:24:07` | `waf`      |
+| **1605** | `195.83.2.34`   | anomaly score out-of-band: sql_injection: 10, anomaly: 10 | FR      | 2200 Renater          |           | `2026-10-12 19:38:45` | `waf`      |
+| **1603** | `195.83.2.34`   | LePresidente/http-generic-401-bf                          | FR      | 2200 Renater          | **ban:1** | `2026-10-12 18:35:45` | `crowdsec` |
+
+here, **1605** is the ID of our SQL attack.
+As we can see the attack was detected and couldn't do any damage as we are secured against sql injections. However it wasn't banned to avoid false-positives.
+<a id="9"></a>
+____
+## 9. If I had the time/funding
+
+If i had **more time**, (in the upcoming months) i would : 
+_ Implement Authelia or any 2FA portal to eliminate breach risks
+_  Migrate from Tailscale to Headscale (Open source and self hosted, more secure)
+_  Create custom Crowdsec configurations to neutralize slow brute forcing 
+
+If i had **more funding**, i would have : 
+_ Tried Load-Balancing to replicate and neutralise DDOS attacks (Ever since i've heard about Cloudfare's i've been burning with passion to try it). (possibly a layer 4 Load balancer instead of a simple 7) Unfortunetly i lack the computers, and it's a bit overkill for a simple home server...
+
+_ More RAM to run my own local defense threat hunting LLM ( not necessary in any way as pattern recognition with tools like crowdsec is more than enough, but necessary to get a taste of the future of Cybersecurity).
