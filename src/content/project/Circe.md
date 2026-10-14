@@ -328,8 +328,6 @@ filenames:
 
 **Problem:** CrowdSec initialization failed due to an undefined Nextcloud volume reference (`invalid compose project`). 
 **Solution:** Identified a Docker Compose internal naming discrepancy. Corrected the external volume mapping in the CrowdSec configuration to target `circe-nextcloud_nextcloud`.
-
-This integration relies on crowdsourced Cyber Threat Intelligence (CTI) feeds, automatically blocking IPs flagged for anomalous behavior, brute-force attempts, or known CVE exploitation across the global CrowdSec network. thanks to the Crowdsec community.
 <a id="8"></a>
 _____
 ## 8. Attack Scenarios Results (Brute force, SQL injection)
@@ -359,13 +357,13 @@ docker exec crowdsec cscli alerts list
 ```
 which returns : 
 
-| ID | Source IP | Reason / Trigger | Country | ASN / Organization | Decision | Timestamp (UTC) | Kind |
-|---|---|---|:---:|---|:---:|---|:---:|
-| 1603 | `195.83.2.34` | LePresidente/http-generic-401-bf | FR | 2200 Renater | `ban:1` | 2026-10-12 18:35:45 | `crowdsec` |
-| 1598 | `193.32.162.164` | anomaly score out-of-band: lfi: 5, anomaly: 15 | RO | 47890 Unmanaged Ltd | — | 2026-10-12 09:44:51 | `waf` |
-| 1597 | `193.32.162.164` | crowdsecurity/vpatch-git-config | RO | 47890 Unmanaged Ltd | — | 2026-10-12 09:44:51 | `waf` |
-| 1588 | `144.172.98.192` | anomaly score out-of-band: lfi: 5, anomaly: 5 | US | 14956 ROUTERHOSTING | — | 2026-10-11 18:25:04 | `waf` |
-| 1587 | `144.172.98.192` | crowdsecurity/vpatch-git-config | US | 14956 ROUTERHOSTING | — | 2026-10-11 18:25:04 | `waf` |
+| ID   | Source IP        | Reason / Trigger                               | Country | ASN / Organization  | Decision | Timestamp (UTC)     |    Kind    |
+| ---- | ---------------- | ---------------------------------------------- | :-----: | ------------------- | :------: | ------------------- | :--------: |
+| 1603 | `195.83.2.34`    | LePresidente/http-generic-401-bf               |   FR    | 2200 Renater        | `ban:1`  | 2026-10-12 18:35:45 | `crowdsec` |
+| 1598 | `193.32.162.164` | anomaly score out-of-band: lfi: 5, anomaly: 15 |   RO    | 47890 Unmanaged Ltd |          | 2026-10-12 09:44:51 |   `waf`    |
+| 1597 | `193.32.162.164` | crowdsecurity/vpatch-git-config                |   RO    | 47890 Unmanaged Ltd |          | 2026-10-12 09:44:51 |   `waf`    |
+| 1588 | `144.172.98.192` | anomaly score out-of-band: lfi: 5, anomaly: 5  |   US    | 14956 ROUTERHOSTING |          | 2026-10-11 18:25:04 |   `waf`    |
+| 1587 | `144.172.98.192` | crowdsecurity/vpatch-git-config                |   US    | 14956 ROUTERHOSTING |          | 2026-10-11 18:25:04 |   `waf`    |
 
 the first ip is the latest (mine)
 to get even more details we can inspect the specific **alert ID** generated from the previous command :
@@ -452,14 +450,14 @@ here, **1605** is the ID of our SQL attack.
 As we can see the attack was detected and couldn't do any damage as we are secured against sql injections. However it wasn't banned to avoid false-positives.
 <a id="9"></a>
 ____
-## 9. If I had the time/funding
+## 9. Next Steps: If I Had More Time and Funding
 
-If i had **more time**, (in the upcoming months) i would : 
-_ Implement Authelia or any 2FA portal to eliminate breach risks
-_  Migrate from Tailscale to Headscale (Open source and self hosted, more secure)
-_  Create custom Crowdsec configurations to neutralize slow brute forcing 
+### With More Time
+* **Deploy a 2FA Portal (Authelia / Authentik):** To reduce unauthorized access risks.
+* **Migrate from Tailscale to Headscale:** Switch to a fully open-source, self-hosted control server for the mesh VPN to retain complete control over the network infrastructure.
+* **Fine-tune CrowdSec Scenarios:** Write custom CrowdSec parsers and scenarios to actively detect and neutralize low-and-slow brute force attacks that bypass default thresholds.
 
-If i had **more funding**, i would have : 
-_ Tried Load-Balancing to replicate and neutralise DDOS attacks (Ever since i've heard about Cloudfare's i've been burning with passion to try it). (possibly a layer 4 Load balancer instead of a simple 7) Unfortunetly i lack the computers, and it's a bit overkill for a simple home server...
+### With More Funding
+* **L4 Load Balancing & DDoS Mitigation:** Set up my own Load balancer system (layer 4 over 7 preferably ). A bit overkill for a home lab, but a setup I have wanted to build ever since reading into Cloudflare's edge design.
 
-_ More RAM to run my own local defense threat hunting LLM ( not necessary in any way as pattern recognition with tools like crowdsec is more than enough, but necessary to get a taste of the future of Cybersecurity).
+* **Dedicated Compute/RAM for Local Threat Hunting LLMs:** Add enough memory to run local LLMs dedicated to log analysis and threat detection. While traditional rule-based pattern matching (like CrowdSec) is more than enough today, running local models would be a great way to experiment with emerging workflows.
