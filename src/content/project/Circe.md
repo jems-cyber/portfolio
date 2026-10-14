@@ -331,8 +331,7 @@ filenames:
 
 This integration relies on crowdsourced Cyber Threat Intelligence (CTI) feeds, automatically blocking IPs flagged for anomalous behavior, brute-force attempts, or known CVE exploitation across the global CrowdSec network. thanks to the Crowdsec community.
 <a id="8"></a>
-----
-
+_____
 ## 8. Attack Scenarios Results (Brute force, SQL injection)
 
 We will test out different scenarios to check if our server is correctly secured against those attacks.
