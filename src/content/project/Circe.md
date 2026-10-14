@@ -454,19 +454,14 @@ ____
 
 ### With More Time
 
-> **Deploy a 2FA Portal (Authelia / Authentik)**  
-> To reduce unauthorized access risks.
+ * ***Deploy a 2FA Portal (Authelia / Authentik)** : To reduce unauthorized access risks.
 
-> **Migrate from Tailscale to Headscale**  
-> Switch to a fully open-source, self-hosted control server for the mesh VPN to retain complete control over the network infrastructure.
+* **Migrate from Tailscale to Headscale**  : Switch to a fully open-source, self-hosted control server for the mesh VPN to retain complete control over the network infrastructure.
 
-> **Fine-tune CrowdSec Scenarios**  
-> Write custom CrowdSec parsers and scenarios to actively detect and neutralize low-and-slow brute force attacks that bypass default thresholds.
+* ***Fine-tune CrowdSec Scenarios**  :  Write custom CrowdSec parsers and scenarios to actively detect and neutralize low-and-slow brute force attacks that bypass default thresholds.
 
 ### With More Funding
 
-> **L4 Load Balancing & DDoS Mitigation**  
-> Set up my own Load balancer system (layer 4 over 7 preferably ). A bit overkill for a home lab, but a setup I have wanted to build ever since reading into Cloudflare's edge design.
+* **L4 Load Balancing & DDoS Mitigation**  : Set up my own Load balancer system (layer 4 over 7 preferably ). A bit overkill for a home lab, but a setup I have wanted to build ever since reading into Cloudflare's edge design.
 
-> **Dedicated Compute/RAM for Local Threat Hunting LLMs**  
-> Add enough memory to run local LLMs dedicated to log analysis and threat detection. While traditional rule-based pattern matching (like CrowdSec) is more than enough today, running local models would be a great way to experiment with emerging workflows.
+* **Dedicated Compute/RAM for Local Threat Hunting LLMs**  : Add enough memory to run local LLMs dedicated to log analysis and threat detection. While traditional rule-based pattern matching (like CrowdSec) is more than enough today, running local models would be a great way to experiment with emerging workflows.
