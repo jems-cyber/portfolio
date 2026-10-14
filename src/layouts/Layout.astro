@@ -38,6 +38,18 @@ const { language, textDirection } = I18N;
 
     <!-- Comment the line below to disable View Transitions -->
     <ClientRouter fallback="swap" />
+
+    <!-- RE-APPLIES DARK MODE ON PAGE SWAP -->
+    <script is:inline>
+      document.addEventListener('astro:after-swap', () => {
+        if (
+          localStorage.theme === 'dark' ||
+          (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark');
+        }
+      });
+    </script>
   </head>
 
   <body class="antialiased text-default bg-page tracking-tight">
