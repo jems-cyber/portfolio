@@ -454,11 +454,11 @@ ____
 
 ### With More Time
 
- * ***Deploy a 2FA Portal (Authelia / Authentik)** : To reduce unauthorized access risks.
+ * **Deploy a 2FA Portal (Authelia / Authentik)** : To reduce unauthorized access risks.
 
 * **Migrate from Tailscale to Headscale**  : Switch to a fully open-source, self-hosted control server for the mesh VPN to retain complete control over the network infrastructure.
 
-* ***Fine-tune CrowdSec Scenarios**  :  Write custom CrowdSec parsers and scenarios to actively detect and neutralize low-and-slow brute force attacks that bypass default thresholds.
+* *Fine-tune CrowdSec Scenarios**  :  Write custom CrowdSec parsers and scenarios to actively detect and neutralize low-and-slow brute force attacks that bypass default thresholds.
 
 ### With More Funding
 
