@@ -1,5 +1,5 @@
 ---
-title: Simulating Train Network with Cisco packet tracer
+title: Simulating A Train Network(CBTC)  with Cisco packet tracer
 description: "Using Cisco Packet Tracer to configure and simulate a CBTC train network"
 image: ~/assets/images/train.png
 skills:
@@ -46,6 +46,7 @@ To simulate the physical distance between the station and the tunnel, I connecte
 To prove the core infrastructure works, I successfully pinged the station from the moving train. Additionally, checking the router's CLI shows the "O" (OSPF) route, proving it dynamically learned how to reach the Train's Wi-Fi network.
 
 ![Train successfully pinging the station](~/assets/images/train_pinging_Router1.png) ![OSPF Routing Table Proof](~/assets/images/R1_CLI_show_ip_route.png)
+
 <a id="3"></a>
 ___
 ### 3. Testing the default vulnerability
