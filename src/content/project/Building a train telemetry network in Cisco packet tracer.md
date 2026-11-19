@@ -34,7 +34,7 @@ publishDate: 2026-11-19
 At the station level, I used a Cisco switch to create three separate Virtual Local Area Networks (VLANs): one for Train Data, one for Station Equipment (like ticket machines), and one for Public Wi-Fi. This logical separation ensures that traffic from these three different environments does not mix on the local switch level.
 <a id="2"></a>
 ___
-### 3. Connecting the train and station with OSPF
+### 2. Connecting the train and station with OSPF
 
 **What is OSPF?**   OSPF (Open Shortest Path First) is a smart, self-updating GPS for network traffic.
 In standard networking, I have to manually draw the map and tell the routers exactly how data should travel from point A to point B. OSPF allows the station and tunnel routers could automatically discover each other. It allows them to instantly calculate the best and fastest route for the train's data to travel across the fiber cable, completely hands-free.
@@ -45,7 +45,7 @@ To simulate the physical distance between the station and the tunnel, I connecte
 
 To prove the core infrastructure works, I successfully pinged the station from the moving train. Additionally, checking the router's CLI shows the "O" (OSPF) route, proving it dynamically learned how to reach the Train's Wi-Fi network.
 
-![Train successfully pinging the station](~/assets/images/train_pinging_Router1_3.png) ![OSPF Routing Table Proof](~/assets/images/R1_CLI_show_ip_route_3.png)
+![Train successfully pinging the station](~/assets/images/train_pinging_Router1.png) ![OSPF Routing Table Proof](~/assets/images/R1_CLI_show_ip_route.png)
 <a id="3"></a>
 ___
 ### 3. Testing the default vulnerability
