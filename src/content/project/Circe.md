@@ -8,7 +8,7 @@ skills:
   - Sanoid
   - ZFS
   - https and reverse proxy protocols
-publishDate: 2023-11-01
+publishDate: 2026-08-01
 ---
 		
 **Executive Summary:** 
